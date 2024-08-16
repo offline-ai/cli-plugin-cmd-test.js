@@ -21,11 +21,10 @@ npm install -g @offline-ai/cli
 ```
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [Commands](#commands)
-  - [`ai test`](#ai-test)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Commands
