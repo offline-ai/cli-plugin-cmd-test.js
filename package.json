@@ -12,7 +12,7 @@
   "dependencies": {
     "@isdk/ai-tool": "workspace:*",
     "@isdk/ai-tool-agent": "workspace:*",
-    "@oclif/core": "^4.0.17",
+    "@oclif/core": "^4",
     "@offline-ai/cli-common": "workspace:*",
     "@offline-ai/cli-plugin-core": "workspace:*",
     "color-json": "^3.0.5",
@@ -66,9 +66,9 @@
     "bin": "ai",
     "dirname": "ai",
     "commands": "./dist/oclif/commands",
-    "plugins": [],
-    "theme": "theme.json",
-    "topicSeparator": " "
+    "plugins": [
+      "@offline-ai/cli-plugin-core"
+    ]
   },
   "scripts": {
     "build": "shx rm -rf dist && tsup",
