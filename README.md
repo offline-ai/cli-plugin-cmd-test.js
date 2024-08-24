@@ -72,8 +72,7 @@ FLAGS
   -t, --inputs=<value>                 the input histories folder for interactive mode to record
   -u, --api=<value>                    the api URL
       --[no-]banner                    show banner
-      --[no-]consoleClear              Whether console clear after stream output, default to true in interactive, false
-                                       to non-interactive
+      --[no-]consoleClear              Whether console clear after stream echo output, default to true
       --no-chats                       disable chat histories, defaults to false
       --no-inputs                      disable input histories, defaults to false
 
@@ -91,7 +90,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.4.0/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.5.0/src/commands/run/index.ts)_
 
 ## `ai test`
 
@@ -146,5 +145,5 @@ EXAMPLES
   $ ai test -f ./fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.2/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.3/src/commands/test/index.ts)_
 <!-- commandsstop -->
