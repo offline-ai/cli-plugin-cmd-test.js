@@ -92,11 +92,11 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.6.0/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.6.1/src/commands/run/index.ts)_
 
 ## `ai test`
 
-🔬 Run simple ai-agent fixtures to test(draft).
+🔬 Run simple AI fixtures to test(draft).
 
 ```
 USAGE
@@ -117,7 +117,7 @@ FLAGS
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
   -e, --streamEcho=<option>            [default: true] stream echo mode, defaults to true
                                        <options: true|false|line>
-  -f, --script=<value>                 the ai-agent fixture file path
+  -f, --script=<value>                 the AI fixture file path
   -h, --histories=<value>              the chat histories folder to record
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
@@ -140,9 +140,9 @@ GLOBAL FLAGS
   --json  Format output as json.
 
 DESCRIPTION
-  🔬 Run simple ai-agent fixtures to test(draft).
+  🔬 Run simple AI fixtures to test(draft).
 
-  Execute fixtures file to test ai-agent script file and check result.
+  Execute fixtures file to test AI script file and check result.
 
 EXAMPLES
   $ ai test -f ./fixture.yaml -l info
