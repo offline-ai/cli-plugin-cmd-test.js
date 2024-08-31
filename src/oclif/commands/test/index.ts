@@ -10,9 +10,9 @@ import { getKeysPath, getMultiLevelExtname } from '@isdk/ai-tool'
 import { get as getByPath, omit } from 'lodash-es'
 
 export default class RunTest extends AICommand {
-  static summary = '🔬 Run simple ai-agent fixtures to test(draft).'
+  static summary = '🔬 Run simple AI fixtures to test(draft).'
 
-  static description = 'Execute fixtures file to test ai-agent script file and check result.'
+  static description = 'Execute fixtures file to test AI script file and check result.'
 
   static examples = [
     `<%= config.bin %> <%= command.id %> -f ./fixture.yaml -l info`,
@@ -21,7 +21,7 @@ export default class RunTest extends AICommand {
   static flags = {
     ...AICommand.flags,
     ...AICommonFlags,
-    script: Flags.string({char: 'f', description: 'the ai-agent fixture file path'}),
+    script: Flags.string({char: 'f', description: 'the AI fixture file path'}),
     stream: Flags.boolean({char: 'm', description: 'stream mode, defaults to false', default: false}),
     'consoleClear': Flags.boolean({
       aliases: ['console-clear', 'ConsoleClear', 'Console-clear', 'Console-Clear'],
