@@ -21,12 +21,10 @@ npm install -g @offline-ai/cli
 ```
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test`](#ai-test)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Commands
@@ -42,9 +40,9 @@ npm install -g @offline-ai/cli
 ```
 USAGE
   $ ai run [FILE] [DATA] [--json] [-c <value>] [--banner] [-u <value>] [-s <value>...] [-l
-    silence|fatal|error|warn|info|debug|trace] [-h <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m]
-    [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>] [-e
-    true|false|line] [--consoleClear]
+    silence|fatal|error|warn|info|verbose|debug|trace] [-h <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs
+    ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>]
+    [-e true|false|line] [-e <value>] [--consoleClear]
 
 ARGUMENTS
   FILE  the script file path, or the json data when `-f` switch is set
@@ -62,12 +60,13 @@ FLAGS
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
   -e, --streamEcho=<option>            [default: true] stream echo mode, defaults to true
                                        <options: true|false|line>
+  -e, --streamEchoChars=<value>        stream echo max characters limit, defaults to no limit
   -f, --script=<value>                 the ai-agent script file name or id
   -h, --histories=<value>              the chat histories folder to record
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: silence|fatal|error|warn|info|debug|trace>
+                                       <options: silence|fatal|error|warn|info|verbose|debug|trace>
   -m, --[no-]stream                    stream mode, defaults to true
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
@@ -94,7 +93,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.7.2/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.0/src/commands/run/index.ts)_
 
 ## `ai test`
 
@@ -103,9 +102,9 @@ _See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugi
 ```
 USAGE
   $ ai test [--json] [-c <value>] [--banner] [-u <value>] [-s <value>...] [-l
-    silence|fatal|error|warn|info|debug|trace] [-h <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m]
-    [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>] [-e
-    true|false|line] [--consoleClear]
+    silence|fatal|error|warn|info|verbose|debug|trace] [-h <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs
+    ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>]
+    [-e true|false|line] [-e <value>] [--consoleClear]
 
 FLAGS
   -A, --aiPreferredLanguage=<value>    the ISO 639-1 code for the AI preferred language to translate the user input
@@ -119,12 +118,13 @@ FLAGS
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
   -e, --streamEcho=<option>            [default: true] stream echo mode, defaults to true
                                        <options: true|false|line>
+  -e, --streamEchoChars=<value>        stream echo max characters limit, defaults to no limit
   -f, --script=<value>                 the AI fixture file path
   -h, --histories=<value>              the chat histories folder to record
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: silence|fatal|error|warn|info|debug|trace>
+                                       <options: silence|fatal|error|warn|info|verbose|debug|trace>
   -m, --stream                         stream mode, defaults to false
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
