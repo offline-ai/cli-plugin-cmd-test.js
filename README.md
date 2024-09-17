@@ -93,7 +93,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.1/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.2/src/commands/run/index.ts)_
 
 ## `ai test`
 
@@ -150,5 +150,5 @@ EXAMPLES
   $ ai test -f ./fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.13/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.14/src/commands/test/index.ts)_
 <!-- commandsstop -->
