@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.16](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.15...v0.1.16) (2024-09-18)
+
 ## [0.1.15](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.14...v0.1.15) (2024-09-17)
 
 ## [0.1.14](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.13...v0.1.14) (2024-09-17)
