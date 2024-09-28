@@ -1,13 +1,8 @@
-import fs from 'fs'
-import path from 'path'
 import cj from 'color-json'
 import {Flags} from '@oclif/core'
-import { LogLevelMap, logLevel, parseFrontMatter, parseYaml } from '@isdk/ai-tool-agent'
+import { logLevel } from '@isdk/ai-tool-agent'
 
-import {runScript} from '@offline-ai/cli-plugin-core'
-import { AICommand, AICommonFlags, expandPath, showBanner } from '@offline-ai/cli-common'
-import { getKeysPath, getMultiLevelExtname } from '@isdk/ai-tool'
-import { get as getByPath, omit } from 'lodash-es'
+import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
 import { testFixtureFile } from '../../../lib/test-fixture-file.js'
 
 export default class RunTest extends AICommand {
