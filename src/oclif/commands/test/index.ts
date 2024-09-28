@@ -8,6 +8,7 @@ import {runScript} from '@offline-ai/cli-plugin-core'
 import { AICommand, AICommonFlags, expandPath, showBanner } from '@offline-ai/cli-common'
 import { getKeysPath, getMultiLevelExtname } from '@isdk/ai-tool'
 import { get as getByPath, omit } from 'lodash-es'
+import { testFixtureFile } from '../../../lib/test-fixture-file.js'
 
 export default class RunTest extends AICommand {
   static summary = '🔬 Run simple AI fixtures to test(draft).'
@@ -38,91 +39,25 @@ export default class RunTest extends AICommand {
     const userConfig = await this.loadConfig(flags.config, opts)
     logLevel.json = isJson
     const hasBanner = userConfig.banner ?? userConfig.interactive
-    let script = userConfig.script
+    const script = userConfig.script
     if (!script) {
       this.error('missing fixture file to run! require argument: `-f <fixture_file_name>`')
     }
 
     if (hasBanner) {showBanner()}
+    userConfig.ThisCmd = this
 
-    script = expandPath(script, userConfig)
-    const extname = path.extname(script)
-    if (!extname || extname.length === 1) {
-      script = path.join(path.dirname(script), path.basename(script, extname) + '.yaml')
-    } //
-
-    const fixtureText = fs.readFileSync(script, {encoding: 'utf8'})
-    if (!fixtureText) {
-      this.error(`fixture file not found: ${script}`)
-    }
-
-    const fixtureInfo = parseFrontMatter(fixtureText)
-    if (!fixtureInfo.data.script) {
-      // this.error('missing script to run! the script option should be in the fixture file: ' + script)
-      fixtureInfo.data.script = path.basename(script, getMultiLevelExtname(script, 2))
-    }
-
-    let fixtures = parseYaml(fixtureInfo.content)
-    if (!fixtures) {
-      this.error('Can not find fixture in the file: ' + script)
-    }
-    if (!Array.isArray(fixtures)) {
-      fixtures = [fixtures]
-    }
-    const fixtureFilepath = script
-    script = expandPath(fixtureInfo.data.script, userConfig)
-    if (!userConfig.logLevel) {
-      userConfig.logLevel = userConfig.interactive ? 'error' : 'warn'
-    }
-
-    // await this.config.runHook('init_tools', {id: 'run', userConfig})
-
-    let failedCount = 0
-    let passedCount = 0
-    for (let i = 0; i < fixtures.length; i++) {
-      const fixture = fixtures[i]
-      const input = fixture.input
-      if (!input) {
-        this.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
-      }
-      const output = fixture.output
-      if (!output) {
-        this.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
-      }
-      userConfig.data = fixture.input
-      userConfig.interactive = false
-
-      try {
-        let result = await runScript(script, userConfig)
-        if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
-          result = result.content
-        }
-        const keys = getKeysPath(output)
-        let failed = false
-        for (const key of keys) {
-          const actualValue = getByPath(result, key)
-          const expectedValue = getByPath(output, key)
-          if (actualValue != expectedValue) {
-            // console.log(`❌ ~ RunTest[${i}] ~ failed on ${key}:`, cj(input), '~ expected:', cj(expectedValue), 'actual:', cj(actualValue));
-            failed = true
-          }
-        }
-        const reason = result.reason ? `Reason: ${result.reason}` : ''
-        if (failed) {
-          failedCount++
-          console.log(`❌ ~ RunTest[${i}] ~ failed:`, cj(input), reason);
-          console.log('🔧 ~ actual output:', cj(omit(result, ['reason'])), 'expected output:', cj(omit(output, ['reason'])));
-        } else {
-          passedCount++
-          console.log(`👍 ~ RunTest[${i}] ~ ok!`, reason);
-        }
-      } catch (error: any) {
-        if (error) {
-          console.log('🚀 ~ RunTest ~ run ~ error:', error)
-          this.error(error.message)
-        }
+    const testResult = await testFixtureFile(script, userConfig)
+    for (let i = 0; i < testResult.logs.length; i++) {
+      const testLog = testResult.logs[i]
+      const reason = testLog.reason ? `Reason: ${testLog.reason}` : ''
+      if (testLog.passed) {
+        console.log(`👍 ~ RunTest[${i}] ~ ok!`, reason);
+      } else {
+        console.log(`❌ ~ RunTest[${i}] ~ failed:`, cj(testLog.input), reason);
+        console.log('🔧 ~ actual output:', cj(testLog.result), 'expected output:', cj(testLog.expected));
       }
     }
-    console.log(`${passedCount} passed, ${failedCount} failed, total ${fixtures.length}`)
+    console.log(`${testResult.passedCount} passed, ${testResult.failedCount} failed, total ${testResult.fixtures.length}`)
   }
 }
