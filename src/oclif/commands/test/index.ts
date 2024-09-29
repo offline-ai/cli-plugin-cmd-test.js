@@ -93,7 +93,7 @@ export default class RunTest extends AICommand {
       for await (const testLog of testInfo) {
         test.logs.push(testLog)
         const i = testLog.i
-        const reason = testLog.reason ? `Reason: ${testLog.reason}` : ''
+        const reason = testLog.reason ? `Reason: ${typeof testLog.reason === 'string' ? testLog.reason : cj(testLog.reason)}` : ''
         const actual = testLog.actual
         const expected = testLog.expected
         if (testLog.passed) {
