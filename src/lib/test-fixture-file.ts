@@ -21,6 +21,14 @@ export interface TestFixtureFileResult {
   logs: TestFixtureLogItem[];
 }
 
+const ReasonNames = ['reason', 'reasons', 'explanation', 'explanations', 'reasoning', 'reasonings']
+
+function getReasonValue(obj: any) {
+  // get obj value by any ReasonNames
+  const name = ReasonNames.find(name => name in obj)
+  return name && obj[name]
+}
+
 export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath, userConfig, fixtureFilepath}: {scriptFilepath: string, userConfig: any, fixtureFilepath: string}) {
   const thisCmd = userConfig.ThisCmd
 
@@ -64,10 +72,10 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         failed = true
         error = err
       }
-      const reason = result.reason
+      const reason = !isResultStr ? getReasonValue(result) : undefined
       if (!isResultStr) {
-        if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ['reason'])}
-        if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ['reason'])}
+        if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
+        if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
       const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i}
       if (error) {testLog.error = error}
