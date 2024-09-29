@@ -23,8 +23,11 @@ export function toMatchObject(actual: any, expected: any) {
     const v = getByPath(expected, k)
     if (isRegExp(v)) {
       setByPath(expected, k, expect.stringMatching(toRegExp(v)))
+      // must visit it to active the proxy object, or toMatchObject can not work
+      getByPath(expected, k)
     } else if (typeof v === 'string') {
-      setByPath(expected, k, expect.stringContaining(v))
+      setByPath(expected, k, expect.stringContaining(v.trim()))
+      getByPath(expected, k)
     }
   }
   const result = expect(actual).toMatchObject(expected)
