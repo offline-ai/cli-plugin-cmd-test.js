@@ -11,20 +11,61 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 
 # Quick Start
 
-Before using, you need to first install the [Offline AI Client](https://npmjs.org/package/@offline-ai/cli).
+Before using, you need to install the [Offline AI Client](https://npmjs.org/package/@offline-ai/cli).
 
 # Install
 
+Install the Client If you haven't already installed the client, use the following command to install it globally:
+
 ```bash
-#If not already installed, install the client:
 npm install -g @offline-ai/cli
+```
+File Naming Conventions
+
+* The test fixture file should be in the same directory as the AI Prompt/Agent script file.
+* The test fixture file name should be `[basename].fixture.yaml`.
+* The AI Prompt/Agent script file name should be `[basename].[other-name].ai.yaml`.
+
+Running Tests To run the test fixture file, use the following command:
+
+```bash
+ai test "[basename].fixture.yaml"
+```
+
+This command will run all matching Prompt/Agent script files in the same directory, one by one.
+
+Test Fixture Data Format The test fixture file uses YAML format.
+
+Each test item includes input, expected output, and an optional skip flag:
+
+```yaml
+# the test fixture item:
+- input: # the input passed into the script
+    content: '...'
+    ...
+  output: # the expected output to compare the script's output
+    ...
+    name: !re /^First/ # can be a regexp string to match
+  skip:   # optional flag to skip the test
+```
+
+Skipping Tests in Script Front Matter To specify that a script should be skipped during testing, set `skip: true` in the script's front matter:
+
+```yaml
+---
+description: 'This is a AI script'
+test:
+  skip: true
+---
 ```
 
 <!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [Commands](#commands)
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test`](#ai-test)
 <!-- tocstop -->
 
 # Commands
