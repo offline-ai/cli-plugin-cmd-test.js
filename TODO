@@ -1,4 +1,5 @@
 feats:
   ✔ add RegEx matcher @done(24-09-28 17:44)
   ✔ 根据fixture文件名称，猜测对应的AI脚本名，如果fixture 没有指定script @done(24-09-28 18:33)
+  ☐ multi scripts to test
   ☐ 打分，打分我感觉是AI才能用。如果是代码，则只能使用数组，或者自定义tag（!score）表示的数组，数组的每个元素为一个得分点：分值，和 matcher，如果匹配则获得该分值. 分值如果省略默认为1分。

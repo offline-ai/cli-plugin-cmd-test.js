@@ -3,7 +3,8 @@ import { Args, Flags } from '@oclif/core'
 import { logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
-import { testFixtureFile, TestFixtureFileResult, TestFixtureLogItem } from '../../../lib/test-fixture-file.js'
+import { testFixtureFile, TestFixtureFileResult } from '../../../lib/test-fixture-file.js'
+import { omit } from 'lodash-es'
 
 export default class RunTest extends AICommand {
   static args = {
@@ -22,13 +23,32 @@ export default class RunTest extends AICommand {
 
   static flags = {
     ...AICommand.flags,
-    ...AICommonFlags,
-    script: Flags.string({char: 'f', description: 'the AI fixture file path'}),
-    stream: Flags.boolean({char: 'm', description: 'stream mode, defaults to false', default: false}),
+    ...omit(AICommonFlags, ['interactive']),
+    // stream: Flags.boolean({char: 'm', description: 'stream mode, defaults to false', default: false}),
+    streamEcho: Flags.string({
+      char: 'e', description: 'stream echo mode, defaults to true',
+      default: 'line',
+      options: ['true', 'false', 'line'],
+      allowNo: true,
+      // dependsOn: ['stream'],
+    }),
+
+    streamEchoChars: Flags.integer({
+      char: 'e', description: 'stream echo max characters limit, defaults to no limit',
+      default: 80,
+      // dependsOn: ['stream'],
+    }),
+
     'consoleClear': Flags.boolean({
       aliases: ['console-clear', 'ConsoleClear', 'Console-clear', 'Console-Clear'],
       description: 'Whether console clear after stream output, default to true in interactive, false to non-interactive',
       allowNo: true,
+    }),
+    includeIndex: Flags.integer({char: 'i', description: 'the index of the fixture to run', multiple: true}),
+    excludeIndex: Flags.integer({
+      char: 'e',
+      description: 'the index of the fixture to exclude from running',
+      multiple: true,
     }),
   }
 
@@ -53,8 +73,15 @@ export default class RunTest extends AICommand {
     if (hasBanner) {showBanner()}
     userConfig.ThisCmd = this
 
+    if (!userConfig.logLevel) {
+      userConfig.logLevel = 'error'
+    }
+    const level = userConfig.logLevel
+
     const testResults = await testFixtureFile(fixtureFilename, userConfig)
     // const testResults: {script: string, test: TestFixtureFileResult}[] = []
+    let totalPassed = 0
+    let totalFailed = 0
 
     // for await (const {script, test: testInfo} of testFixtureFile(fixtureFilename, userConfig)) {
     for (const vTest of testResults) {
@@ -71,25 +98,28 @@ export default class RunTest extends AICommand {
         const expected = testLog.expected
         if (testLog.passed) {
           passedCount++
-          this.log(`👍 ~ RunTest[${i}] ~ ok!`, reason);
-          const level = userConfig.logLevel
-          if (LogLevelMap[level] >= LogLevelMap['verbose']) {
-            this.log('🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-            this.log('🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
+          totalPassed++
+          this.log(`👍 ~ Run Fixture[${i}] ~ ok!`, reason);
+          if (LogLevelMap[level] <= LogLevelMap['notice']) {
+            this.log('👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+            this.log('👍🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
           }
         } else {
           failedCount++
-          this.log(`❌ ~ RunTest[${i}] ~ failed input:`, cj(testLog.input), reason);
-          this.log('🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-          this.log('🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
+          totalFailed++
+          this.log(`❌ ~ Run(${script}) Fixture[${i}] ~ failed input:`, cj(testLog.input), reason);
+          this.log('🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+          this.log('🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
+          if (testLog.error?.message) this.log('🔴 ', testLog.error.message)
         }
       }
-      this.log(`${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
+      this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
       test.passedCount = passedCount
       test.failedCount = failedCount
       vTest.test = test as any
       // testResults.push({script, test})
     }
+    this.log(`All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}`)
 
     return testResults as unknown as {script: string, test: TestFixtureFileResult}[]
   }
