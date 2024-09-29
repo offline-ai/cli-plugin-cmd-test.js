@@ -86,7 +86,7 @@ export default class RunTest extends AICommand {
     // for await (const {script, test: testInfo} of testFixtureFile(fixtureFilename, userConfig)) {
     for (const vTest of testResults) {
       const {script, test: testInfo} = vTest
-      this.log('🚀 ~ Running ~ script:', script)
+      // this.log('🚀 ~ Running ~ script:', script)
       let passedCount = 0
       let failedCount = 0
       const test: TestFixtureFileResult = {logs: [], passedCount, failedCount}
@@ -110,7 +110,7 @@ export default class RunTest extends AICommand {
           this.log(`❌ ~ Run(${script}) Fixture[${i}] ~ failed input:`, cj(testLog.input), reason);
           this.log('🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
           this.log('🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
-          if (testLog.error?.message) this.log('🔴 ', testLog.error.message)
+          if (testLog.error) this.log('🔴 ', testLog.error.message || testLog.error)
         }
       }
       this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)

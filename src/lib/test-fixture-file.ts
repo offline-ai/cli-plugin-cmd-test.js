@@ -54,7 +54,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     userConfig.interactive = false
 
     try {
-      thisCmd.log(`🚀 ~ Running ~ fixture[${i}]`)
+      thisCmd.log(`🚀 ~ Running(${path.basename(scriptFilepath)}) ~ fixture[${i}]`)
       let result = await runScript(scriptFilepath, userConfig)
       // console.log('🚀 ~ testFixtureFileInScript ~ result:', result)
       if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
@@ -66,12 +66,12 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       let error
       const isResultStr = typeof result === 'string'
 
-      try {
-        toMatchObject(actual, expected)
-      } catch(err: any) {
+      const failedKeys = toMatchObject(actual, expected)
+      if (failedKeys) {
         failed = true
-        error = err
+        error = `MisMatch:\n    ${failedKeys.join('\n    ')}`
       }
+
       const reason = !isResultStr ? getReasonValue(result) : undefined
       if (!isResultStr) {
         if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
