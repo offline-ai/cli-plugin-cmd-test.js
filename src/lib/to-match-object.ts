@@ -6,7 +6,7 @@
 // } from '@vitest/expect'
 import { getKeysPath, isRegExp, toRegExp } from '@isdk/ai-tool'
 import { cloneDeep, get as getByPath } from 'lodash-es'
-import 'colors'
+import colors from 'ansicolor'
 import { diffChars } from 'diff'
 
 // // allows using expect.extend instead of chai.use to extend plugins
@@ -32,8 +32,8 @@ export function toMatchObject(actual: any, expected: any, failedKeys: string[] =
         const diff = diffChars(actualValue, v)
         // const diffStr = diff.map(d => d.added ? `+${d.value}` : d.removed ? `-${d.value}` : d.value).join('')
         const diffStr = diff.map(d =>
-          d.added ? d.value.bgGreen :
-          d.removed ? d.value.bgRed : d.value).join('')
+          d.added ? colors.green('+'+d.value) :
+          d.removed ? colors.red('-'+d.value) : colors.darkGray(d.value)).join('')
         failedKeys.push(k+ ':' + diffStr)
       }
     } else {
