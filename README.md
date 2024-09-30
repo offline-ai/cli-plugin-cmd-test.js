@@ -20,11 +20,14 @@ Install the Client If you haven't already installed the client, use the followin
 ```bash
 npm install -g @offline-ai/cli
 ```
-File Naming Conventions
+
+# File Naming Conventions
 
 * The test fixture file should be in the same directory as the AI Prompt/Agent script file.
 * The test fixture file name should be `[basename].fixture.yaml`.
 * The AI Prompt/Agent script file name should be `[basename].[other-name].ai.yaml`.
+
+# Run test
 
 Running Tests To run the test fixture file, use the following command:
 
@@ -46,7 +49,8 @@ Each test item includes input, expected output, and an optional skip flag:
   output: # the expected output to compare the script's output
     ...
     name: !re /^First/ # can be a regexp string to match
-  skip:   # optional flag to skip the test
+  skip: true  # Optional flag to skip the test
+  only: true  # Optional flag to run only this test; only one of 'skip' or 'only' can be set, and 'only' takes precedence
 ```
 
 Skipping Tests in Script Front Matter To specify that a script should be skipped during testing, set `skip: true` in the script's front matter:
@@ -56,23 +60,35 @@ Skipping Tests in Script Front Matter To specify that a script should be skipped
 description: 'This is a AI script'
 test:
   skip: true
+  only: true  # Optional flag to run only this script; only one of 'skip' or 'only' can be set, and 'only' takes precedence
 ---
 ```
 
+# Generate Output
+
+```bash
+ai test "[basename].fixture.yaml" --generateOutput
+```
+
+
+
+
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test`](#ai-test)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [File Naming Conventions](#file-naming-conventions)
+* [Run test](#run-test)
+* [the test fixture item:](#the-test-fixture-item)
+* [Generate Output](#generate-output)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Commands
 
 <!-- commands -->
 * [`ai run [FILE] [DATA]`](#ai-run-file-data)
-* [`ai test`](#ai-test)
+* [`ai test [FILE]`](#ai-test-file)
 
 ## `ai run [FILE] [DATA]`
 
@@ -81,9 +97,9 @@ test:
 ```
 USAGE
   $ ai run [FILE] [DATA] [--json] [-c <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
-    [-l trace|debug|verbose|info|warn|error|fatal|silence] [--histories <value>] [-n] [-k] [-t <value> -i] [--no-chats]
-    [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>]
-    [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
+    [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
+    [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
+    <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
 
 ARGUMENTS
   FILE  the script file path, or the json data when `-f` switch is set
@@ -107,7 +123,7 @@ FLAGS
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: trace|debug|verbose|info|warn|error|fatal|silence>
+                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|silence>
   -m, --[no-]stream                    stream mode, defaults to true
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
@@ -119,6 +135,7 @@ FLAGS
       --[no-]banner                    show banner
       --[no-]consoleClear              Whether console clear after stream echo output, default to true
       --histories=<value>              the chat histories folder to record
+      --logLevelMaxLen=<value>         the max length of log item to display
       --no-chats                       disable chat histories, defaults to false
       --no-inputs                      disable input histories, defaults to false
 
@@ -138,16 +155,20 @@ EXAMPLES
 
 _See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.8/src/commands/run/index.ts)_
 
-## `ai test`
+## `ai test [FILE]`
 
 🔬 Run simple AI fixtures to test(draft).
 
 ```
 USAGE
-  $ ai test [--json] [-c <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...] [-l
-    trace|debug|verbose|info|warn|error|fatal|silence] [--histories <value>] [-n] [-k] [-t <value> -i] [--no-chats]
-    [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>]
-    [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
+  $ ai test [FILE] [--json] [-c <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
+    [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
+    [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
+    <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
+    [-i <value>...] [-e <value>...] [-g]
+
+ARGUMENTS
+  FILE  the test fixtures file path
 
 FLAGS
   -A, --aiPreferredLanguage=<value>    the ISO 639-1 code for the AI preferred language to translate the user input
@@ -160,15 +181,17 @@ FLAGS
   -b, --brainDir=<value>               the brains(LLM) directory
   -c, --config=<value>                 the config file
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
-  -e, --streamEcho=<option>            [default: true] stream echo mode, defaults to true
+  -e, --excludeIndex=<value>...        the index of the fixture to exclude from running
+  -e, --streamEcho=<option>            [default: line] stream echo mode, defaults to true
                                        <options: true|false|line>
-  -e, --streamEchoChars=<value>        stream echo max characters limit, defaults to no limit
-  -f, --script=<value>                 the AI fixture file path
-  -i, --[no-]interactive               interactive mode
+  -e, --streamEchoChars=<value>        [default: 80] stream echo max characters limit, defaults to no limit
+  -f, --script=<value>                 the ai-agent script file name or id
+  -g, --generateOutput                 generate output to fixture file if no output is provided
+  -i, --includeIndex=<value>...        the index of the fixture to run
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: trace|debug|verbose|info|warn|error|fatal|silence>
-  -m, --stream                         stream mode, defaults to false
+                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|silence>
+  -m, --[no-]stream                    stream mode, defaults to true
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
   -p, --promptDirs=<value>...          the prompts template directory
@@ -180,6 +203,7 @@ FLAGS
       --[no-]consoleClear              Whether console clear after stream output, default to true in interactive, false
                                        to non-interactive
       --histories=<value>              the chat histories folder to record
+      --logLevelMaxLen=<value>         the max length of log item to display
       --no-chats                       disable chat histories, defaults to false
       --no-inputs                      disable input histories, defaults to false
 
@@ -192,7 +216,7 @@ DESCRIPTION
   Execute fixtures file to test AI script file and check result.
 
 EXAMPLES
-  $ ai test -f ./fixture.yaml -l info
+  $ ai test ./named.fixture.yaml -l info
 ```
 
 _See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.20/src/commands/test/index.ts)_

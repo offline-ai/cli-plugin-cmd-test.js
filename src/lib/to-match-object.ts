@@ -29,12 +29,16 @@ export function toMatchObject(actual: any, expected: any, failedKeys: string[] =
       if (!regEx.test(actualValue)) {failedKeys.push(k + ': /' + regEx.source + '/' + regEx.flags + `.test(${JSON.stringify(actualValue)}) failed`)}
     } else if (typeof v === 'string') {
       if (typeof actualValue !== 'string' || !actualValue.includes(v.trim())) {
-        const diff = diffChars(actualValue, v)
-        // const diffStr = diff.map(d => d.added ? `+${d.value}` : d.removed ? `-${d.value}` : d.value).join('')
-        const diffStr = diff.map(d =>
-          d.added ? colors.green('+'+d.value) :
-          d.removed ? colors.red('-'+d.value) : colors.darkGray(d.value)).join('')
-        failedKeys.push(k+ ':' + diffStr)
+        if (typeof actualValue === 'string') {
+          const diff = diffChars(v, actualValue)
+          // const diffStr = diff.map(d => d.added ? `+${d.value}` : d.removed ? `-${d.value}` : d.value).join('')
+          const diffStr = diff.map(d =>
+            d.added ? colors.green('+'+d.value) :
+            d.removed ? colors.red('-'+d.value) : colors.darkGray(d.value)).join('')
+          failedKeys.push(k+ ':' + diffStr)
+        } else {
+          failedKeys.push(k + ': ' + JSON.stringify(actualValue) + ' != ' + JSON.stringify(v))
+        }
       }
     } else {
       if (actualValue !== v) {failedKeys.push(k + ': ' + JSON.stringify(actualValue) + ' != ' + JSON.stringify(v))}
