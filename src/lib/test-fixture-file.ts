@@ -6,6 +6,7 @@ import { expandPath } from '@offline-ai/cli-common'
 import { getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
 import { omit } from 'lodash-es'
 import { toMatchObject } from './to-match-object.js'
+import { writeYamlFile } from './write-yaml-file.js'
 
 const DefaultFixtrureExtname = '.fixture.yaml'
 
@@ -47,7 +48,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
     const output = fixture.output
-    if (!output) {
+    if (output == null && !userConfig.generateOutput) {
       thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
     }
     userConfig.data = {...input}
@@ -59,6 +60,12 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       // console.log('🚀 ~ testFixtureFileInScript ~ result:', result)
       if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
         result = result.content
+      }
+      if (output == null) {
+        fixture.output = result
+        thisCmd.log(`Without output: write the result as output`)
+        await writeYamlFile(fixtureFilepath, fixtures)
+        continue
       }
       let failed = false
       let expected = output

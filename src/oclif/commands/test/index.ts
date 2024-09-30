@@ -50,6 +50,7 @@ export default class RunTest extends AICommand {
       description: 'the index of the fixture to exclude from running',
       multiple: true,
     }),
+    generateOutput: Flags.boolean({char: 'g', description: 'generate output to fixture file if no output is provided'}),
   }
 
   async run(): Promise<any> {
