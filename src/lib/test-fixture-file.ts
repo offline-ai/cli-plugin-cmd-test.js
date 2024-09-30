@@ -30,7 +30,7 @@ function getReasonValue(obj: any) {
   return name && obj[name]
 }
 
-export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath, userConfig, fixtureFilepath}: {scriptFilepath: string, userConfig: any, fixtureFilepath: string}) {
+export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath, userConfig, fixtureFilepath, skips}: {scriptFilepath: string, userConfig: any, fixtureFilepath: string, skips: {[k: number]: boolean}}) {
   const thisCmd = userConfig.ThisCmd
 
   // await thisCmd.config.runHook('init_tools', {id: 'run', userConfig})
@@ -40,7 +40,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
   // const testLogs: TestFixtureLogItem[] = []
   for (let i = 0; i < fixtures.length; i++) {
     const fixture = fixtures[i]
-    if (fixture.skip) {
+    if (skips[i]) {
       continue
     }
     const input = fixture.input
@@ -167,16 +167,21 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
   }
 
   const onlyIndex = fixtures.findIndex(fixture => fixture.only)
+  const skips = {} as {[key: number]: boolean}
+
   if (onlyIndex >= 0) {
     fixtures.forEach((fixture, i) => {
-      fixture.skip = i !== onlyIndex
+      skips[i] = i !== onlyIndex
+      // fixture.skip = i !== onlyIndex
     })
   } else if (userConfig.includeIndex || userConfig.excludeIndex) {
     fixtures.forEach((fixture, i) => {
       if (userConfig.includeIndex) {
-        fixture.skip = !userConfig.includeIndex.includes(i)
+        // fixture.skip = !userConfig.includeIndex.includes(i)
+        skips[i] = !userConfig.includeIndex.includes(i)
       } else if (userConfig.excludeIndex) {
-        fixture.skip = userConfig.excludeIndex.includes(i)
+        // fixture.skip = userConfig.excludeIndex.includes(i)
+        skips[i] = userConfig.excludeIndex.includes(i)
       }
     })
   }
@@ -184,7 +189,7 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
   const testResults: {script: string, test: Awaited<ReturnType<typeof testFixtureFileInScript>>}[] = []
 
   for (const scriptFilepath of scriptIds) {
-    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath})
+    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath, skips})
     testResults.push({script: scriptFilepath, test: testResult})
     // yield {script: scriptFilepath, test: testResult}
   }
