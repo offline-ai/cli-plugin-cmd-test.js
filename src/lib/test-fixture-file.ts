@@ -145,7 +145,13 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
     // thisCmd.error('missing script to run! the script option should be in the fixture file: ' + script)
     const fixtureFileBaseName = path.basename(fixtureFilepath, getMultiLevelExtname(fixtureFilepath, 2))
     const scriptInfos = await AIScriptEx.getMatchedScriptInfos('/^'+ fixtureFileBaseName + '[.]/', {searchPaths: userConfig.agentDirs})
-    scriptIds.push(...Object.keys(scriptInfos).filter( id => !scriptInfos[id].data.test?.skip))
+    const keys = Object.keys(scriptInfos)
+    const onlyIndex = keys.findIndex(id => scriptInfos[id].data.test?.only)
+    if (onlyIndex >= 0) {
+      scriptIds.push(keys[onlyIndex])
+    } else {
+      scriptIds.push(...keys.filter(id => !scriptInfos[id].data.test?.skip))
+    }
   }
 
   if (!scriptIds.length) {
@@ -160,7 +166,12 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
     fixtures = [fixtures]
   }
 
-  if (userConfig.includeIndex || userConfig.excludeIndex) {
+  const onlyIndex = fixtures.findIndex(fixture => fixture.only)
+  if (onlyIndex >= 0) {
+    fixtures.forEach((fixture, i) => {
+      fixture.skip = i !== onlyIndex
+    })
+  } else if (userConfig.includeIndex || userConfig.excludeIndex) {
     fixtures.forEach((fixture, i) => {
       if (userConfig.includeIndex) {
         fixture.skip = !userConfig.includeIndex.includes(i)
