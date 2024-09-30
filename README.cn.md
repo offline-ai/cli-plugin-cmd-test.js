@@ -38,7 +38,8 @@
      output: # 预期输出结果
        name: !re /^First/ # 可以是正则表达式字符串匹配
        ...
-     skip:   # 可选跳过标志
+     skip: true  # 可选跳过标志
+     only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
    ```
 
 5. **脚本跳过测试** 若要让指定脚本跳过测试，可以在脚本元数据部分(front-matter)设置:
@@ -48,5 +49,12 @@
    description: '这是一个AI脚本描述'
    test:
      skip: true
+     only: true # skip 和 only 只能设置一个, only 优先
    ---
+   ```
+
+6. **生成输出样例** 当测试用例不存在output项的时候，启用该开关(`-g` or `--generateOutput`)，将自动把脚本输出作为output写入到用例文件中。
+
+   ```bash
+   ai test "[basename].fixture.yaml" --generateOutput
    ```

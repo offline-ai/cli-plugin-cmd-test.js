@@ -66,22 +66,22 @@ test:
 
 # Generate Output
 
+Enable this `-g` or `--generateOutput` flag. It will use the output of the script and write into it if there are no output in the fixtures file.
+
 ```bash
 ai test "[basename].fixture.yaml" --generateOutput
 ```
 
-
-
-
 <!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [File Naming Conventions](#file-naming-conventions)
-* [Run test](#run-test)
-* [the test fixture item:](#the-test-fixture-item)
-* [Generate Output](#generate-output)
-* [Commands](#commands)
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [File Naming Conventions](#file-naming-conventions)
+- [Run test](#run-test)
+- [Generate Output](#generate-output)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test [FILE]`](#ai-test-file)
 <!-- tocstop -->
 
 # Commands
