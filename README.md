@@ -53,6 +53,8 @@ Each test item includes input, expected output, and an optional skip flag:
   only: true  # Optional flag to run only this test; only one of 'skip' or 'only' can be set, and 'only' takes precedence
 ```
 
+Fixtures Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
+
 Skipping Tests in Script Front Matter To specify that a script should be skipped during testing, set `skip: true` in the script's front matter:
 
 ```yaml
@@ -73,14 +75,15 @@ ai test "[basename].fixture.yaml" --generateOutput
 ```
 
 <!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [File Naming Conventions](#file-naming-conventions)
-* [Run test](#run-test)
-* [the test fixture item:](#the-test-fixture-item)
-* [Generate Output](#generate-output)
-* [Commands](#commands)
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [File Naming Conventions](#file-naming-conventions)
+- [Run test](#run-test)
+- [Generate Output](#generate-output)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test [FILE]`](#ai-test-file)
 <!-- tocstop -->
 
 # Commands
@@ -218,5 +221,5 @@ EXAMPLES
   $ ai test ./named.fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.20/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.21/src/commands/test/index.ts)_
 <!-- commandsstop -->
