@@ -134,9 +134,13 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
 
   const scriptIds: string[] = []
 
-  if (fixtureInfo.data.script) {
-    const scriptFilepath = expandPath(fixtureInfo.data.script, userConfig)
-    scriptIds.push(scriptFilepath)
+  let scripts = fixtureInfo.data.script || fixtureInfo.data.scripts
+  if (scripts) {
+    scripts = Array.isArray(scripts) ? scripts : [scripts]
+    scripts.forEach((script: string) => {
+      const scriptFilepath = expandPath(script, userConfig)
+      scriptIds.push(scriptFilepath)
+    })
   } else {
     // thisCmd.error('missing script to run! the script option should be in the fixture file: ' + script)
     const fixtureFileBaseName = path.basename(fixtureFilepath, getMultiLevelExtname(fixtureFilepath, 2))
