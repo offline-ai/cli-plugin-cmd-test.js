@@ -144,7 +144,7 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
   } else {
     // thisCmd.error('missing script to run! the script option should be in the fixture file: ' + script)
     const fixtureFileBaseName = path.basename(fixtureFilepath, getMultiLevelExtname(fixtureFilepath, 2))
-    const scriptInfos = await AIScriptEx.getMatchedScriptInfos('/^'+ fixtureFileBaseName + '[.]/', {searchPaths: userConfig.agentDirs})
+    const scriptInfos = await AIScriptEx.getMatchedScriptInfos('/^'+ fixtureFileBaseName + '([.]|$)/', {searchPaths: userConfig.agentDirs})
     const keys = Object.keys(scriptInfos)
     const onlyIndex = keys.findIndex(id => scriptInfos[id].data.test?.only)
     if (onlyIndex >= 0) {
