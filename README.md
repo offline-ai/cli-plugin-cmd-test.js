@@ -75,15 +75,14 @@ ai test "[basename].fixture.yaml" --generateOutput
 ```
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [File Naming Conventions](#file-naming-conventions)
-- [Run test](#run-test)
-- [Generate Output](#generate-output)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test [FILE]`](#ai-test-file)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [File Naming Conventions](#file-naming-conventions)
+* [Run test](#run-test)
+* [the test fixture item:](#the-test-fixture-item)
+* [Generate Output](#generate-output)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Commands
@@ -155,7 +154,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.9/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.10/src/commands/run/index.ts)_
 
 ## `ai test [FILE]`
 
