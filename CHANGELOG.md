@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.23](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.22...v0.1.23) (2024-10-05)
+
+
+### Bug Fixes
+
+* can not run script without addtional name ([01bc3c6](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/01bc3c64f8bafd23f2e6c28961acab64361977fb))
+* regex test can not work if output is regex directly ([00bc185](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/00bc1855d77796cad92940c428e0d016e009ba45))
+* skip in fixtures not work ([f5296f3](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/f5296f341b781be6942ac8e9fc4d86b686fa3180))
+
+
+### Refactor
+
+* adjust ouput scripts result at last ([1fe5ab8](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/1fe5ab8468d55f2d3327f70e20e256b06c1a93cb))
+
 ## [0.1.22](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.21...v0.1.22) (2024-10-04)
 
 ## [0.1.21](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.20...v0.1.21) (2024-09-30)
