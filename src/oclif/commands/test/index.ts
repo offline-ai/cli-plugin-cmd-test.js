@@ -114,11 +114,16 @@ export default class RunTest extends AICommand {
           if (testLog.error) this.log('🔴 ', testLog.error.message || testLog.error)
         }
       }
-      this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
+      // this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
       test.passedCount = passedCount
       test.failedCount = failedCount
       vTest.test = test as any
       // testResults.push({script, test})
+    }
+    for (const vTest of testResults) {
+      const {script, test} = vTest
+      const {passedCount, failedCount} = test as any
+      this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
     }
     this.log(`All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}`)
 
