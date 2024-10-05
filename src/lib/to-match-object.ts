@@ -24,7 +24,6 @@ function matchValue(actual: any, expected: any, failedKeys: string[] = [], key: 
   if (typeof actual === 'string') {actual = actual.trim()}
   if (isRegExp(expected)) {
     const regEx = toRegExp(expected)
-    console.log('🚀 ~ matchValue ~ regEx:', regEx, actual)
     if (!regEx.test(actual)) {
       failedKeys.push(kStr + '/' + regEx.source + '/' + regEx.flags + `.test(${JSON.stringify(actual)}) failed`)
     }
