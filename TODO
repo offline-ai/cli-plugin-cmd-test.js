@@ -6,4 +6,6 @@ feats:
   ✔ add `--generateOutput(-g)` flag to auto generate the output if no output in fixture file. @done(24-09-30 09:04)
   ✔ add `only` support in fixture and scripts @done(24-09-30 09:11)
   ✔ `script`/`scripts` in the fixtures file front-matter config can be array now @done(24-09-30 09:04)
+  ✔ regex test can not work @done(24-10-05 16:15)
+  ☐ skip in fixtures not work
   ☐ 打分，打分我感觉是AI才能用。如果是代码，则只能使用数组，或者自定义tag（!score）表示的数组，数组的每个元素为一个得分点：分值，和 matcher，如果匹配则获得该分值. 分值如果省略默认为1分。
