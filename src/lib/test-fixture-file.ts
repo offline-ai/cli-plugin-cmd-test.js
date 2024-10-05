@@ -40,7 +40,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
   // const testLogs: TestFixtureLogItem[] = []
   for (let i = 0; i < fixtures.length; i++) {
     const fixture = fixtures[i]
-    if (skips[i]) {
+    if (skips[i] || fixture.skip) {
       continue
     }
     const input = fixture.input
