@@ -50,16 +50,16 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     if (skips[i] || fixture.skip) {
       continue
     }
-    const input = fixture.input
+    const input = fixture.input ?? fixtureConfig?.input
     if (!input) {
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
-    const output = fixture.output
+    const output = fixture.output ?? fixtureConfig?.output
     if (output == null && !userConfig.generateOutput) {
       thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
     }
     fixtureConfig = await formatObject(fixtureConfig, {data: {...input, ...fixtureConfig}, input: fixture})
-    userConfig.data = await formatObject({...input}, {data: fixtureConfig, input: fixture})
+    userConfig.data = await formatObject({...input}, {data: {...input, fixtureConfig}, input: fixture})
     userConfig.interactive = false
     const data = {...fixtureConfig, ...userConfig.data}
 

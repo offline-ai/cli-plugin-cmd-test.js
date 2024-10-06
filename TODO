@@ -9,4 +9,5 @@ feats:
   ✔ regex test can not work @done(24-10-05 16:15)
   ✔ skip in fixtures not work @done(24-10-05 16:28)
   ✔ supports template and tempalte function @done(24-10-06 11:17)
+  ✔ supports input and output in front-matter config of fixture file @done(24-10-06 14:25)
   ☐ 打分，打分我感觉是AI才能用。如果是代码，则只能使用数组，或者自定义tag（!score）表示的数组，数组的每个元素为一个得分点：分值，和 matcher，如果匹配则获得该分值. 分值如果省略默认为1分。

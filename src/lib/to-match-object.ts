@@ -128,10 +128,10 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
   const kStr = key ? key + ': ' : ''
   if (typeof actual === 'string') {actual = actual.trim()}
   if (vType === 'string') {
-    expected = await formatTemplate(expected, {data, templateFormat: data?.templateFormat})
+    expected = await formatTemplate(expected, {...options, templateFormat: data?.templateFormat})
   }
   if (isRegExp(expected)) {
-    const regEx = await formatTemplate(toRegExp(expected), {data, templateFormat: data?.templateFormat})
+    const regEx = await formatTemplate(toRegExp(expected), {...options, templateFormat: data?.templateFormat})
     if (!regEx.test(actual)) {
       failedKeys.push(kStr + '/' + regEx.source + '/' + regEx.flags + `.test(${JSON.stringify(actual)}) failed`)
     }

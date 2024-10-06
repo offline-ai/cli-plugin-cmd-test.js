@@ -36,29 +36,65 @@ npm install -g @offline-ai/cli
 注意:
 
 * 此命令将按顺序运行同一目录下匹配的所有PPE脚本文件。
-* **测试样例数据格式** 测试样例文件采用YAML格式。每个测试项包括输入、预期输出及可选的跳过标志：
 
-   ```yaml
-   ---
-   # Front-matter configurations:
-   description: 'This is a AI test fixtures file'
-   # (可选) 强制指定要运行的 PPE script 文件名，忽略约定的PPE文件名
-   script: '[basename].ai.yaml'
-   # 声明可以在测试中使用的模板数据变量：
-   content: 'hi world'
-   ---
-   # 测试样例项
-   - input: # 输入内容
-       content: '...{{content}}'
-       ...
-     output: # 预期输出结果
-       name: !re /^First/ # 可以是正则表达式字符串匹配
-       ...
-     skip: true  # 可选跳过标志
-     only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
-   ```
+**测试样例数据格式** 测试样例文件采用YAML格式。每个测试项包括输入（`input`）、预期输出(`output`)及可选的跳过(`skip`)和只执行(`only`)标志：
 
-* Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
+ ```yaml
+ ---
+ # Front-matter configurations:
+ description: 'This is a AI test fixtures file'
+ # (可选) 强制指定要运行的 PPE script 文件名，忽略约定的PPE文件名
+ script: '[basename].ai.yaml'
+ ---
+ # 测试样例项
+ - input: # 输入内容
+     content: '...'
+     ...
+   output: # 预期输出结果
+     name: !re /^First/ # 可以是正则表达式字符串匹配
+     ...
+   skip: true  # 可选跳过标志
+   only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
+ ```
+
+* Fixture Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
+
+模板数据变量示例：
+
+```yaml
+ ---
+ # Front-matter configurations:
+ description: 'This is a AI test fixtures file'
+ # 声明可以在测试中使用的模板数据变量：
+ content: 'hi world'
+ # the varaiable can be a template string too.
+AnswerPattern: /The Answer is {{answer}}.$/
+---
+ # 测试样例项
+- input: # 输入内容
+    content: '{{content}}'
+    ...
+  output: "{{AnswerPattern}}"
+  answer: 42
+```
+
+Input/Output 模板示例:
+
+```yaml
+---
+description: 'This is a AI test fixtures file'
+input:
+  content: |-
+   {{question}}
+   At last output at the end of response: "The Answer is {{type}}."
+output: /The Answer is {{answer}}.$/i
+---
+- question: Would a nickel fit inside a koala pouch?
+  type: yes/no
+  answer: yes
+```
+
+## 测试开关
 
 1. **脚本跳过测试** 若要让指定PPE脚本跳过测试，可以在脚本元数据部分(front-matter)设置:
 
