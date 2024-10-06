@@ -9,6 +9,19 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Version](https://img.shields.io/npm/v/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
+<!-- toc -->
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [File Naming Conventions](#file-naming-conventions)
+- [Run test](#run-test)
+  - [Template Data](#template-data)
+- [Generate Output](#generate-output)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test [FILE]`](#ai-test-file)
+<!-- tocstop -->
+
 # Quick Start
 
 Before using, you need to install the [Offline AI Client](https://npmjs.org/package/@offline-ai/cli).
@@ -25,7 +38,8 @@ npm install -g @offline-ai/cli
 
 * The test fixture file should be in the same directory as the AI Prompt/Agent script file.
 * The test fixture file name should be `[basename].fixture.yaml`.
-* The AI Prompt/Agent script file name should be `[basename].[other-name].ai.yaml`.
+* The AI Prompt/Agent（PPE） script file name should be `[basename][.additional-name].ai.yaml`.
+  * The `[.additional-name]` is optional.
 
 # Run test
 
@@ -42,6 +56,12 @@ Test Fixture Data Format The test fixture file uses YAML format.
 Each test item includes input, expected output, and an optional skip flag:
 
 ```yaml
+---
+# Front-matter configurations:
+description: 'This is a AI test fixtures file'
+# (Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename
+script: '[basename].ai.yaml'
+---
 # the test fixture item:
 - input: # the input passed into the script
     content: '...'
@@ -55,7 +75,7 @@ Each test item includes input, expected output, and an optional skip flag:
 
 Fixtures Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
 
-Skipping Tests in Script Front Matter To specify that a script should be skipped during testing, set `skip: true` in the script's front matter:
+Skipping Tests in PPE Script Front Matter To specify that a script should be skipped during testing, set `skip: true` in the script's front matter:
 
 ```yaml
 ---
@@ -66,6 +86,26 @@ test:
 ---
 ```
 
+## Template Data
+
+The template data can be used in the test fixture file.
+
+```yaml
+---
+description: 'This is a AI test fixtures file'
+# declare the template data varaibles which can be used in the test:
+content: 'hi world'
+# the varaiable can be a template string too.
+AnswerPattern: /The Answer is {{answer}}.$/
+---
+# the test fixture item:
+- input: # the input passed into the script
+    content: '{{content}}'
+    ...
+  output: "{{AnswerPattern}}"
+  answer: 42
+```
+
 # Generate Output
 
 Enable this `-g` or `--generateOutput` flag. It will use the output of the script and write into it if there are no output in the fixtures file.
@@ -73,17 +113,6 @@ Enable this `-g` or `--generateOutput` flag. It will use the output of the scrip
 ```bash
 ai test "[basename].fixture.yaml" --generateOutput
 ```
-
-<!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [File Naming Conventions](#file-naming-conventions)
-* [Run test](#run-test)
-* [the test fixture item:](#the-test-fixture-item)
-* [Generate Output](#generate-output)
-* [Commands](#commands)
-<!-- tocstop -->
 
 # Commands
 
@@ -220,5 +249,5 @@ EXAMPLES
   $ ai test ./named.fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.22/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.23/src/commands/test/index.ts)_
 <!-- commandsstop -->

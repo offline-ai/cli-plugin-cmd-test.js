@@ -39,7 +39,8 @@
     "ts-node": "^10",
     "tsup": "^8.1.0",
     "tsx": "^4.16.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.1"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -79,11 +80,10 @@
     "lint": "eslint . --ext .ts",
     "opack": "oclif pack",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "pnpm run lint",
     "prepack": "NODE_OPTIONS='--trace-warnings --no-warnings=ExperimentalWarning' oclif manifest && oclif readme",
     "release": "pnpm run clean && pnpm run build && pnpm run prepack && git add -f README.md && git ci -m 'docs: update readme' || true && pnpm dlx commit-and-tag-version -s",
     "release.alpha": "pnpm run release -- --prerelease alpha",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "vitest run",
     "version": "oclif readme && git add README.md"
   },
   "types": "dist/index.d.ts"

@@ -5,7 +5,7 @@ import { AIScriptEx, runScript } from '@offline-ai/cli-plugin-core'
 import { expandPath } from '@offline-ai/cli-common'
 import { getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
 import { omit } from 'lodash-es'
-import { toMatchObject } from './to-match-object.js'
+import { formatObject, validateMatch } from './to-match-object.js'
 import { writeYamlFile } from './write-yaml-file.js'
 
 const DefaultFixtrureExtname = '.fixture.yaml'
@@ -30,7 +30,14 @@ function getReasonValue(obj: any) {
   return name && obj[name]
 }
 
-export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath, userConfig, fixtureFilepath, skips}: {scriptFilepath: string, userConfig: any, fixtureFilepath: string, skips: {[k: number]: boolean}}) {
+export interface TestFixtureFileOptions {
+  scriptFilepath: string
+  userConfig: any
+  fixtureFilepath: string
+  fixtureConfig: any
+  skips: {[k: number]: boolean}
+}
+export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath, userConfig, fixtureFilepath, skips, fixtureConfig}: TestFixtureFileOptions) {
   const thisCmd = userConfig.ThisCmd
 
   // await thisCmd.config.runHook('init_tools', {id: 'run', userConfig})
@@ -51,8 +58,10 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     if (output == null && !userConfig.generateOutput) {
       thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
     }
-    userConfig.data = {...input}
+    fixtureConfig = await formatObject(fixtureConfig, {data: {...input, ...fixtureConfig}, input: fixture})
+    userConfig.data = await formatObject({...input}, {data: fixtureConfig, input: fixture})
     userConfig.interactive = false
+    const data = {...fixtureConfig, ...userConfig.data}
 
     try {
       thisCmd.log(`🚀 ~ Running(${path.basename(scriptFilepath)}) ~ fixture[${i}]`)
@@ -73,7 +82,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       let error
       const isResultStr = typeof result === 'string'
 
-      const failedKeys = toMatchObject(actual, expected)
+      const failedKeys = await validateMatch(actual, expected, {data, input: fixture})
       if (failedKeys) {
         failed = true
         error = `MisMatch:\n    ${failedKeys.join('\n    ')}`
@@ -84,6 +93,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
+      expected =  await formatObject(expected, {data, input: fixture})
       const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i}
       if (error) {testLog.error = error}
       if (reason) {testLog.reason = reason}
@@ -187,9 +197,10 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
   }
 
   const testResults: {script: string, test: Awaited<ReturnType<typeof testFixtureFileInScript>>}[] = []
+  const fixtureConfig = fixtureInfo.data //await formatObject(fixtureInfo.data, {data: fixtureInfo.data})
 
   for (const scriptFilepath of scriptIds) {
-    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath, skips})
+    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath, skips, fixtureConfig})
     testResults.push({script: scriptFilepath, test: testResult})
     // yield {script: scriptFilepath, test: testResult}
   }
