@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.24](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.23...v0.1.24) (2024-10-06)
+
+
+### Features
+
+* add supports template and tempalte function ([25f21e9](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/25f21e9e59fb95bbb6bdf0468d945b6f30ece13b))
+* supports input and output in front-matter config of fixture file ([11e90f3](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/11e90f3b8966ea3a971b60cc12309d22e1a18900))
+
 ## [0.1.23](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.22...v0.1.23) (2024-10-05)
 
 
