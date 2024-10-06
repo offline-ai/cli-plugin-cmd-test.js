@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.25](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.24...v0.1.25) (2024-10-06)
+
+
+### Bug Fixes
+
+* should assign empty string for format ([32dd952](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/32dd95272ea6cbc18b82b3437ba87e6ee5375628))
+* should treat input in front-matter as default ([55eafaf](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/55eafaf0d301aef9d3d147b74322b9a1e28a9564))
+
 ## [0.1.24](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.23...v0.1.24) (2024-10-06)
 
 
