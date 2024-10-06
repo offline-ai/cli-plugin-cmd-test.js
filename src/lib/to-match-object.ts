@@ -29,7 +29,7 @@ export async function formatTemplate(value: any, options: PromptTemplateOptions)
       const data = {...options.input, ...options.data}
       options = omit(options, ['data', 'input'])
       const content = await PromptTemplate.formatIf({template: value, ...options, data})
-      if (content) {value = content}
+      if (typeof content === 'string') {value = content}
     }
     if (vRegEx) {
       if (vRegEx.source !== value) {
