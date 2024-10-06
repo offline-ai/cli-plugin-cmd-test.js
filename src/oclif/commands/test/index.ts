@@ -1,3 +1,4 @@
+import path from 'path'
 import cj from 'color-json'
 import { Args, Flags } from '@oclif/core'
 import { logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
@@ -100,7 +101,7 @@ export default class RunTest extends AICommand {
         if (testLog.passed) {
           passedCount++
           totalPassed++
-          this.log(`👍 ~ Run Fixture[${i}] ~ ok!`, reason);
+          this.log(`👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason);
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
             this.log('👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
             this.log('👍🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
@@ -108,7 +109,7 @@ export default class RunTest extends AICommand {
         } else {
           failedCount++
           totalFailed++
-          this.log(`❌ ~ Run(${script}) Fixture[${i}] ~ failed input:`, cj(testLog.input), reason);
+          this.log(`❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed input:`, cj(testLog.input), reason);
           this.log('🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
           this.log('🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
           if (testLog.error) this.log('🔴 ', testLog.error.message || testLog.error)

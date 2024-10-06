@@ -4,7 +4,7 @@ import { LogLevelMap, parseFrontMatter, parseYaml } from '@isdk/ai-tool-agent'
 import { AIScriptEx, runScript } from '@offline-ai/cli-plugin-core'
 import { expandPath } from '@offline-ai/cli-common'
 import { getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
-import { omit } from 'lodash-es'
+import { cloneDeep, omit, omitBy } from 'lodash-es'
 import { formatObject, validateMatch } from './to-match-object.js'
 import { writeYamlFile } from './write-yaml-file.js'
 
@@ -30,6 +30,20 @@ function getReasonValue(obj: any) {
   return name && obj[name]
 }
 
+async function defaultValue(value: any, defaultValue?: any, data?: any) {
+  if (value == null) {
+    value = defaultValue
+  } else if (typeof value === 'object' && defaultValue && typeof defaultValue === 'object') {
+    value = {...defaultValue, ...value}
+  }
+  if (data) {
+    value = await formatObject(value, {data})
+  }
+  if (value && (!Array.isArray(value)) && typeof value === 'object') {
+    value = omitBy(value, (v, k) => v == null || (typeof v === 'string' && v.trim() === ''))
+  }
+  return value
+}
 export interface TestFixtureFileOptions {
   scriptFilepath: string
   userConfig: any
@@ -44,17 +58,20 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
 
   let failedCount = 0
   let passedCount = 0
+  const _fixtureConfig = fixtureConfig
   // const testLogs: TestFixtureLogItem[] = []
   for (let i = 0; i < fixtures.length; i++) {
-    const fixture = fixtures[i]
+    fixtureConfig = cloneDeep(_fixtureConfig)
+    const fixture = cloneDeep(fixtures[i])
     if (skips[i] || fixture.skip) {
       continue
     }
-    const input = fixture.input ?? fixtureConfig?.input
+    const input = await defaultValue(fixture.input, fixtureConfig?.input, fixture)
+
     if (!input) {
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
-    const output = fixture.output ?? fixtureConfig?.output
+    const output = await defaultValue(fixture.output, fixtureConfig?.output, fixture)
     if (output == null && !userConfig.generateOutput) {
       thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
     }
@@ -66,7 +83,6 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     try {
       thisCmd.log(`🚀 ~ Running(${path.basename(scriptFilepath)}) ~ fixture[${i}]`)
       let result = await runScript(scriptFilepath, userConfig)
-      // console.log('🚀 ~ testFixtureFileInScript ~ result:', result)
       if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
         result = result.content
       }
