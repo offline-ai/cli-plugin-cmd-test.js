@@ -1,13 +1,14 @@
 import path from 'path'
 import cj from 'color-json'
 import { Args, Flags } from '@oclif/core'
-import { logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
+import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
-import { testFixtureFile, TestFixtureFileResult } from '../../../lib/test-fixture-file.js'
+import { getTestFixtures, loadTestFixtureFile, TestFixtureFileResult } from '../../../lib/test-fixture-file.js'
 import { omit } from 'lodash-es'
 
 export default class RunTest extends AICommand {
+  declare logLevel: LogLevel
   static args = {
     file: Args.string({
       description: 'the test fixtures file path',
@@ -47,11 +48,21 @@ export default class RunTest extends AICommand {
     }),
     includeIndex: Flags.integer({char: 'i', description: 'the index of the fixture to run', multiple: true}),
     excludeIndex: Flags.integer({
-      char: 'e',
+      char: 'x',
       description: 'the index of the fixture to exclude from running',
       multiple: true,
     }),
     generateOutput: Flags.boolean({char: 'g', description: 'generate output to fixture file if no output is provided'}),
+    runCount: Flags.integer({
+      char: 'c', description: 'The number of times to run the test case to check if the results are consistent with the previous run, and to record the counts of matching and non-matching results',
+      default: 1,
+    }),
+  }
+
+  log(level: LogLevel, ...args: any[]) {
+    if (LogLevelMap[this.logLevel] <= LogLevelMap[level]) {
+      return super.log(...args)
+    }
   }
 
   async run(): Promise<any> {
@@ -65,6 +76,7 @@ export default class RunTest extends AICommand {
     }
 
     const userConfig = await this.loadConfig(flags.config, opts)
+    this.logLevel = userConfig.logLevel = userConfig.logLevel ?? 'warn'
     logLevel.json = isJson
     const hasBanner = userConfig.banner ?? userConfig.interactive
     const fixtureFilename = userConfig.script
@@ -78,56 +90,107 @@ export default class RunTest extends AICommand {
     if (!userConfig.logLevel) {
       userConfig.logLevel = 'error'
     }
+
+    const fixtureFileInfo = await loadTestFixtureFile(fixtureFilename, userConfig)
+    userConfig.fixtureFileInfo = fixtureFileInfo
+    const runCount = userConfig.runCount >= 1 ? userConfig.runCount : 1
+    const testResults: {script: string, test: TestFixtureFileResult}[][] = []
+    for (let i = 0; i < runCount; i++) {
+      const test = await this.runTest(userConfig)
+      this.log('warn', `----------------------------------------`)
+      testResults.push(test)
+    }
+
+    if (runCount > 1) {
+      // check if the results are consistent with the previous run, and to record the counts of matching and non-matching results
+      const firstTestResult = testResults[0]
+      let failedCount = 0
+      for (let i=0; i < testResults.length; i++) {
+        const vTestResult = testResults[i]
+        let failed = false
+        for (let j=0; j < vTestResult.length; j++) {
+          const vTest = vTestResult[j]
+          const {script, test: testInfo} = vTest
+          const vFirstTest = firstTestResult[j]
+          if (vTest.script !== vFirstTest.script) {
+            // this.error(`The script name is different in the two runs: ${vTest.script} and ${vFirstTest.script}`)
+            this.log('notice', `${i}: The script name is different in the two runs: ${script} and ${vFirstTest.script}`)
+            failed = true
+          }
+          if (testInfo.failedCount !== vFirstTest.test.failedCount) {
+            this.log('notice', `${i}: The failed count is different in the two runs: ${testInfo.failedCount} and ${vFirstTest.test.failedCount}`)
+            failed = true
+          }
+          if (testInfo.passedCount !== vFirstTest.test.passedCount) {
+            this.log('notice', `${i}: The passed count is different in the two runs: ${testInfo.passedCount} and ${vFirstTest.test.passedCount}`)
+            failed = true
+          }
+        }
+        if (failed) {failedCount++}
+      }
+      this.log('warn', `Repeated(${runCount}): ${failedCount} failed.`)
+    }
+    return testResults
+  }
+
+  async runTest(userConfig: any) {
+
     const level = userConfig.logLevel
 
-    const testResults = await testFixtureFile(fixtureFilename, userConfig)
+    const testResult = getTestFixtures(userConfig.fixtureFileInfo)
     // const testResults: {script: string, test: TestFixtureFileResult}[] = []
     let totalPassed = 0
     let totalFailed = 0
+    let totalDuration = 0
 
     // for await (const {script, test: testInfo} of testFixtureFile(fixtureFilename, userConfig)) {
-    for (const vTest of testResults) {
+    for (const vTest of testResult) {
       const {script, test: testInfo} = vTest
       // this.log('🚀 ~ Running ~ script:', script)
       let passedCount = 0
       let failedCount = 0
-      const test: TestFixtureFileResult = {logs: [], passedCount, failedCount}
+      let duration = 0
+      const test: TestFixtureFileResult = {logs: [], passedCount, failedCount, duration}
       for await (const testLog of testInfo) {
         test.logs.push(testLog)
         const i = testLog.i
         const reason = testLog.reason ? `Reason: ${typeof testLog.reason === 'string' ? testLog.reason : cj(testLog.reason)}` : ''
         const actual = testLog.actual
         const expected = testLog.expected
+        duration += testLog.duration
         if (testLog.passed) {
           passedCount++
           totalPassed++
-          this.log(`👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason);
+          this.log('warn', `👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason, ` time ${testLog.duration}ms`);
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
-            this.log('👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-            this.log('👍🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
+            this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+            this.log('notice', '👍🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
           }
         } else {
           failedCount++
           totalFailed++
-          this.log(`❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed input:`, cj(testLog.input), reason);
-          this.log('🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-          this.log('🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
-          if (testLog.error) this.log('🔴 ', testLog.error.message || testLog.error)
+          this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
+          this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
+          this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+          this.log('notice', '🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))
+          if (testLog.error) this.log('notice', '🔴 ', testLog.error.message || testLog.error)
         }
       }
       // this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
       test.passedCount = passedCount
       test.failedCount = failedCount
+      test.duration = duration
+      totalDuration += duration
       vTest.test = test as any
       // testResults.push({script, test})
     }
-    for (const vTest of testResults) {
+    for (const vTest of testResult) {
       const {script, test} = vTest
-      const {passedCount, failedCount} = test as any
-      this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
+      const {passedCount, failedCount, duration} = test as any
+      this.log('warn', `${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}, time ${duration}ms`)
     }
-    this.log(`All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}`)
+    this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}, time ${totalDuration}ms`)
 
-    return testResults as unknown as {script: string, test: TestFixtureFileResult}[]
+    return testResult as unknown as {script: string, test: TestFixtureFileResult}[]
   }
 }

@@ -14,12 +14,14 @@ export interface TestFixtureLogItem {
   passed: boolean, input: any, actual: any, expected: any, reason?: string,
   error?: any,
   i: number,
+  duration: number // ms
 }
 
 export interface TestFixtureFileResult {
   failedCount: number;
   passedCount: number;
   logs: TestFixtureLogItem[];
+  duration: number;
 }
 
 const ReasonNames = ['reason', 'reasons', 'explanation', 'explanations', 'reasoning', 'reasonings']
@@ -80,9 +82,11 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     userConfig.interactive = false
     const data = {...fixtureConfig, ...userConfig.data}
 
+    const ts = Date.now()
     try {
-      thisCmd.log(`🚀 ~ Running(${path.basename(scriptFilepath)}) ~ fixture[${i}]`)
+      thisCmd.log('notice', `🚀 ~ Running(${path.basename(scriptFilepath)}) ~ fixture[${i}]`)
       let result = await runScript(scriptFilepath, userConfig)
+      const duration = Date.now() - ts
       if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
         result = result.content
       }
@@ -110,7 +114,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
       expected =  await formatObject(expected, {data, input: fixture})
-      const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i}
+      const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i, duration}
       if (error) {testLog.error = error}
       if (reason) {testLog.reason = reason}
 
@@ -133,12 +137,30 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
 }
 
 export async function testFixtureFile(fixtureFilepath: string, userConfig: any) {
+  const info = await loadTestFixtureFile(fixtureFilepath, userConfig)
+  return getTestFixtures(info)
+}
+
+export function getTestFixtures({scriptIds, fixtures, skips, fixtureInfo, userConfig, fixtureFilepath}) {
+  const testResults: {script: string, test: Awaited<ReturnType<typeof testFixtureFileInScript>>}[] = []
+  const fixtureConfig = fixtureInfo.data //await formatObject(fixtureInfo.data, {data: fixtureInfo.data})
+
+  for (const scriptFilepath of scriptIds) {
+    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath, skips, fixtureConfig})
+    testResults.push({script: scriptFilepath, test: testResult})
+    // yield {script: scriptFilepath, test: testResult}
+  }
+
+  return testResults
+}
+
+export async function loadTestFixtureFile(fixtureFilepath: string, userConfig: any) {
   const thisCmd = userConfig.ThisCmd
   fixtureFilepath = expandPath(fixtureFilepath, userConfig)
   const extname = getMultiLevelExtname(fixtureFilepath, 2)
   if (!extname || extname.length === 1) {
     fixtureFilepath = path.join(path.dirname(fixtureFilepath), path.basename(fixtureFilepath, extname) + DefaultFixtrureExtname)
-  } //
+  }
 
   const fixtureText = fs.readFileSync(fixtureFilepath, {encoding: 'utf8'})
   if (!fixtureText) {
@@ -212,14 +234,5 @@ export async function testFixtureFile(fixtureFilepath: string, userConfig: any) 
     })
   }
 
-  const testResults: {script: string, test: Awaited<ReturnType<typeof testFixtureFileInScript>>}[] = []
-  const fixtureConfig = fixtureInfo.data //await formatObject(fixtureInfo.data, {data: fixtureInfo.data})
-
-  for (const scriptFilepath of scriptIds) {
-    const testResult = testFixtureFileInScript(fixtures, {scriptFilepath, userConfig, fixtureFilepath, skips, fixtureConfig})
-    testResults.push({script: scriptFilepath, test: testResult})
-    // yield {script: scriptFilepath, test: testResult}
-  }
-
-  return testResults
+  return { scriptIds, fixtures, skips, fixtureInfo, userConfig, fixtureFilepath }
 }
