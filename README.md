@@ -143,10 +143,11 @@ ai test "[basename].fixture.yaml" --generateOutput
 
 ```
 USAGE
-  $ ai run [FILE] [DATA] [--json] [-c <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
-    [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
-    [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
-    <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
+  $ ai run [FILE] [DATA] [--json] [--config <value>] [--banner] [-u <value>] [--apiKey <value>] [-s
+    <value>...] [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories
+    <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a
+    <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-C <value>] [-P <value>]
+    [--consoleClear]
 
 ARGUMENTS
   FILE  the script file path, or the json data when `-f` switch is set
@@ -155,17 +156,16 @@ ARGUMENTS
 FLAGS
   -A, --aiPreferredLanguage=<value>    the ISO 639-1 code for the AI preferred language to translate the user input
                                        automatically, eg, en, etc.
+  -C, --streamEchoChars=<value>        [default: 80] stream echo max characters limit
   -D, --data=<value>...                the data which will be passed to the ai-agent script: key1=value1 key2=value2
   -L, --userPreferredLanguage=<value>  the ISO 639-1 code for the user preferred language to translate the AI result
                                        automatically, eg, en, zh, ja, ko, etc.
   -P, --provider=<value>               the LLM provider, defaults to llamacpp
   -a, --arguments=<value>              the json data which will be passed to the ai-agent script
   -b, --brainDir=<value>               the brains(LLM) directory
-  -c, --config=<value>                 the config file
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
-  -e, --streamEcho=<option>            [default: true] stream echo mode, defaults to true
+  -e, --streamEcho=<option>            [default: line] stream echo mode, defaults to true
                                        <options: true|false|line>
-  -e, --streamEchoChars=<value>        stream echo max characters limit, defaults to no limit
   -f, --script=<value>                 the ai-agent script file name or id
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
@@ -180,6 +180,7 @@ FLAGS
   -u, --api=<value>                    the api URL
       --apiKey=<value>                 the api key (optional)
       --[no-]banner                    show banner
+      --config=<value>                 the config file
       --[no-]consoleClear              Whether console clear after stream echo output, default to true
       --histories=<value>              the chat histories folder to record
       --logLevelMaxLen=<value>         the max length of log item to display
@@ -200,7 +201,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.10/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.11/src/commands/run/index.ts)_
 
 ## `ai test [FILE]`
 
@@ -208,11 +209,11 @@ _See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugi
 
 ```
 USAGE
-  $ ai test [FILE] [--json] [-c <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
+  $ ai test [FILE] [--json] [--config <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
     [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
     [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
     <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
-    [-i <value>...] [-e <value>...] [-g]
+    [-i <value>...] [-x <value>...] [-g] [-c <value>]
 
 ARGUMENTS
   FILE  the test fixtures file path
@@ -226,9 +227,10 @@ FLAGS
   -P, --provider=<value>               the LLM provider, defaults to llamacpp
   -a, --arguments=<value>              the json data which will be passed to the ai-agent script
   -b, --brainDir=<value>               the brains(LLM) directory
-  -c, --config=<value>                 the config file
+  -c, --runCount=<value>               [default: 1] The number of times to run the test case to check if the results are
+                                       consistent with the previous run, and to record the counts of matching and
+                                       non-matching results
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
-  -e, --excludeIndex=<value>...        the index of the fixture to exclude from running
   -e, --streamEcho=<option>            [default: line] stream echo mode, defaults to true
                                        <options: true|false|line>
   -e, --streamEchoChars=<value>        [default: 80] stream echo max characters limit, defaults to no limit
@@ -245,8 +247,10 @@ FLAGS
   -s, --agentDirs=<value>...           the search paths for ai-agent script file
   -t, --inputs=<value>                 the input histories folder for interactive mode to record
   -u, --api=<value>                    the api URL
+  -x, --excludeIndex=<value>...        the index of the fixture to exclude from running
       --apiKey=<value>                 the api key (optional)
       --[no-]banner                    show banner
+      --config=<value>                 the config file
       --[no-]consoleClear              Whether console clear after stream output, default to true in interactive, false
                                        to non-interactive
       --histories=<value>              the chat histories folder to record
@@ -266,5 +270,5 @@ EXAMPLES
   $ ai test ./named.fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.24/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.1.25/src/commands/test/index.ts)_
 <!-- commandsstop -->
