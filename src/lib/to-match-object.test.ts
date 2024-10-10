@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {formatTemplate, formatObject, validateMatch} from './to-match-object.js';
-
-function stripColor(str) {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/\x1B[[(?);]{0,2}(;?\d)*./g, '');
-};
+import { stripConsoleColor } from '@isdk/ai-tool';
 
 describe('validateMatch', async () => {
   it('should handle simple equality', async () => {
@@ -26,7 +22,7 @@ describe('validateMatch', async () => {
     const expected = 'world';
     const result = await validateMatch(actual, expected);
     expect(result).toHaveLength(1)
-    expect(stripColor(result![0])).toEqual('-wor+hel-d+lo');
+    expect(stripConsoleColor(result![0])).toEqual('-wor+hel-d+lo');
   });
 
   it('should handle regex matching', async () => {
@@ -99,7 +95,7 @@ describe('validateMatch', async () => {
     const data = { a: 'world' };
     const result = await validateMatch(actual, expected, { data });
     expect(result).toHaveLength(1)
-    expect(stripColor(result![0])).toEqual('a: -wor+hel-d+lo');
+    expect(stripConsoleColor(result![0])).toEqual('a: -wor+hel-d+lo');
   });
 });
 
