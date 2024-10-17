@@ -59,7 +59,7 @@ npm install -g @offline-ai/cli
 
 * Fixture Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
 
-模板数据变量示例：
+### 模板数据变量示例
 
 ```yaml
  ---
