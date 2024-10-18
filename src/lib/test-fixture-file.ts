@@ -107,7 +107,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       }
       let failed = false
       let expected = output
-      let actual = result
+      const actual = result
       let error
       const isResultStr = typeof result === 'string'
 
@@ -119,7 +119,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
 
       const reason = !isResultStr ? getReasonValue(result) : undefined
       if (!isResultStr) {
-        if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
+        // if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
       expected =  await formatObject(expected, {data, input: fixture})
