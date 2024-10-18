@@ -4,9 +4,11 @@ import { createYamlObjectTag, YamlTypeBaseObject } from "@isdk/ai-tool";
 
 const ajv = new Ajv()
 
+const ValidateSymbol = Symbol('validate')
+
 export class YamlTypeJsonSchema extends YamlTypeBaseObject {
   static YAMLTag = '!json-schema'
-  declare _validate: ValidateFunction<any>
+  declare [ValidateSymbol]: ValidateFunction<any>
 
   static isInstance(obj: any): obj is YamlTypeJsonSchema {
     if (!obj || typeof obj !== 'object') return false
@@ -23,16 +25,22 @@ export class YamlTypeJsonSchema extends YamlTypeBaseObject {
     }
     return schema
   }
+
   static validate(schema:any, data: any) {
     if (!(schema instanceof YamlTypeJsonSchema)) {
       schema = new YamlTypeJsonSchema(schema)
     }
-    return schema.validate(data)
+    return schema[ValidateSymbol](data)
   }
+
+  static getErrors(schema: YamlTypeJsonSchema) {
+    return schema[ValidateSymbol].errors
+  }
+
   constructor(options?: any) {
     super(options)
 
-    Object.defineProperty(this, '_validate', {
+    Object.defineProperty(this, ValidateSymbol, {
       writable: false,
       enumerable: false,
       value: ajv.compile<any>(this.toJSON()),
@@ -46,11 +54,11 @@ export class YamlTypeJsonSchema extends YamlTypeBaseObject {
   }
 
   validate(data: any) {
-    return this._validate(data)
+    return this[ValidateSymbol](data)
   }
 
   getErrors() {
-    return this._validate.errors
+    return this[ValidateSymbol].errors
   }
 }
 
