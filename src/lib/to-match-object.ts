@@ -122,7 +122,6 @@ export interface MatchValueOptions {
  * console.log(result); // Output: []
  */
 export async function validateMatch(actual: any, expected: any, options: MatchValueOptions = {}) {
-  console.log('🚀 ~ validateMatch ~ expected:', expected, YamlTypeJsonSchema.isInstance(expected))
   const data = options.data
   const failedKeys = options.failedKeys || []
   const key = options.key || ''

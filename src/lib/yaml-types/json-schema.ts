@@ -11,7 +11,6 @@ export class YamlTypeJsonSchema extends YamlTypeBaseObject {
   static isInstance(obj: any): obj is YamlTypeJsonSchema {
     if (!obj || typeof obj !== 'object') return false
     let result = obj instanceof YamlTypeJsonSchema
-    console.log('🚀 ~ YamlTypeJsonSchema ~ isInstance ~ result:', result)
     if (!result) {
       result = obj.constructor.YAMLTag === YamlTypeJsonSchema.YAMLTag
     }
