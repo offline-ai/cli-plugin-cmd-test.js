@@ -1,11 +1,12 @@
 import path from 'path'
 import cj from 'color-json'
 import { Args, Flags } from '@oclif/core'
+import { omit } from 'lodash-es'
 import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
 import { getTestFixtures, loadTestFixtureFile, TestFixtureFileResult } from '../../../lib/test-fixture-file.js'
-import { omit } from 'lodash-es'
+import '../../../lib/yaml-types/index.js'
 
 export default class RunTest extends AICommand {
   declare logLevel: LogLevel

@@ -94,6 +94,27 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
+`output`使用`JSON-Schema`对输入进行校验
+
+```yaml
+---
+description: 'This is a AI test fixtures file'
+---
+- input: # 输入内容
+    content: '{{content}}'
+    ...
+  output: !json-schema
+    type: object
+    properties:
+      name:
+        type: string
+        pattern: "^First"
+        minLength: 2
+      age:
+        type: number
+        minimum: 18
+```
+
 ## 测试开关
 
 1. **脚本跳过测试** 若要让指定PPE脚本跳过测试，可以在脚本元数据部分(front-matter)设置:

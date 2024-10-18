@@ -15,6 +15,7 @@
     "@oclif/core": "^4",
     "@offline-ai/cli-common": "workspace:*",
     "@offline-ai/cli-plugin-core": "workspace:*",
+    "ajv": "^8.17.1",
     "ansicolor": "^2.0.3",
     "color-json": "^3.0.5",
     "diff": "^7.0.0",

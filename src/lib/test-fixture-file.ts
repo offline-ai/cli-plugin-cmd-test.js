@@ -7,6 +7,7 @@ import { getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
 import { cloneDeep, omit, omitBy } from 'lodash-es'
 import { formatObject, validateMatch } from './to-match-object.js'
 import { writeYamlFile } from './write-yaml-file.js'
+import { YamlTypeJsonSchema } from './yaml-types/index.js'
 
 const DefaultFixtrureExtname = '.fixture.yaml'
 
@@ -33,17 +34,25 @@ function getReasonValue(obj: any) {
 }
 
 async function defaultValue(value: any, defaultValue?: any, data?: any) {
+  const isYamlJsonSchema = (value instanceof YamlTypeJsonSchema) || (defaultValue instanceof YamlTypeJsonSchema)
+
   if (value == null) {
     value = defaultValue
   } else if (typeof value === 'object' && defaultValue && typeof defaultValue === 'object') {
     value = {...defaultValue, ...value}
   }
+
   if (data) {
     value = await formatObject(value, {data})
   }
   if (value && (!Array.isArray(value)) && typeof value === 'object') {
     value = omitBy(value, (v, k) => v == null || (typeof v === 'string' && v.trim() === ''))
   }
+
+  if (isYamlJsonSchema) {
+    value = YamlTypeJsonSchema.create(value)
+  }
+
   return value
 }
 export interface TestFixtureFileOptions {
@@ -73,7 +82,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     if (!input) {
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
-    const output = await defaultValue(fixture.output, fixtureConfig?.output, fixture)
+    const output = await defaultValue(fixtures[i].output, fixtureConfig?.output, fixture)
     if (output == null && !userConfig.generateOutput) {
       thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
     }

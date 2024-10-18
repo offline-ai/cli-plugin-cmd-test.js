@@ -10,19 +10,17 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
 <!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [File Naming Conventions](#file-naming-conventions)
-* [Run test](#run-test)
-* [Front-matter configurations:](#front-matter-configurations)
-* [(Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename](#optional-forcefully-specify-the-ppe-script-filename-to-run-ignoring-the-conventionally-agreed-ppe-filename)
-* [the test fixture item:](#the-test-fixture-item)
-* [declare the template data varaibles which can be used in the test:](#declare-the-template-data-varaibles-which-can-be-used-in-the-test)
-* [the varaiable can be a template string too.](#the-varaiable-can-be-a-template-string-too)
-* [the test fixture item:](#the-test-fixture-item)
-* [Generate Output](#generate-output)
-* [Commands](#commands)
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [File Naming Conventions](#file-naming-conventions)
+- [Run test](#run-test)
+  - [Template Data](#template-data)
+  - [`output` uses `JSON-Schema` to validate the input](#output-uses-json-schema-to-validate-the-input)
+- [Generate Output](#generate-output)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test [FILE]`](#ai-test-file)
 <!-- tocstop -->
 
 # Quick Start
@@ -121,6 +119,27 @@ output: /The Answer is {{answer}}.$/i
 - question: Would a nickel fit inside a koala pouch?
   type: yes/no
   answer: yes
+```
+
+## `output` uses `JSON-Schema` to validate the input
+
+```yaml
+---
+description: 'This is a AI test fixtures file'
+---
+- input:
+    content: '{{content}}'
+    ...
+  output: !json-schema
+    type: object
+    properties:
+      name:
+        type: string
+        pattern: "^First"
+        minLength: 2
+      age:
+        type: number
+        minimum: 18
 ```
 
 # Generate Output

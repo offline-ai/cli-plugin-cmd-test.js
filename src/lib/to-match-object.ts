@@ -9,6 +9,8 @@ import { get as getByPath, omit, set as setByPath } from 'lodash-es'
 import colors from 'ansicolor'
 import { diffChars } from 'diff'
 
+import { YamlTypeJsonSchema } from './yaml-types/index.js'
+
 // // allows using expect.extend instead of chai.use to extend plugins
 // chai.use(JestExtend)
 // // adds all jest matchers to expect
@@ -120,6 +122,7 @@ export interface MatchValueOptions {
  * console.log(result); // Output: []
  */
 export async function validateMatch(actual: any, expected: any, options: MatchValueOptions = {}) {
+  console.log('🚀 ~ validateMatch ~ expected:', expected, YamlTypeJsonSchema.isInstance(expected))
   const data = options.data
   const failedKeys = options.failedKeys || []
   const key = options.key || ''
@@ -161,6 +164,13 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
     const result = await expected(actual, input)
     if (result !== true) {
       failedKeys.push(kStr + `the ${expected.toString()} function returned false. The actual value: ${JSON.stringify(actual)}`)
+    }
+  } else if (expected instanceof YamlTypeJsonSchema) {
+    const valid = expected.validate(actual)
+    if (!valid) {
+      const errors = expected.getErrors()!
+      // failedKeys.push(kStr + 'json schema validation failed: ' + errors.map(e => e.message).join('\n'))
+      failedKeys.push(kStr + 'json schema validation failed: ' + JSON.stringify(errors))
     }
   } else if (vType === 'object') {
     const keys = getKeysPath(expected)
