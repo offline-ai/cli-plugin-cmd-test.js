@@ -4,7 +4,7 @@ import { LogLevelMap, parseFrontMatter, parseYaml } from '@isdk/ai-tool-agent'
 import { AIScriptEx, runScript } from '@offline-ai/cli-plugin-core'
 import { expandPath } from '@offline-ai/cli-common'
 import { getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
-import { cloneDeep, omit, omitBy } from 'lodash-es'
+import { cloneDeep, defaultsDeep, omit, omitBy } from 'lodash-es'
 import { formatObject, validateMatch } from './to-match-object.js'
 import { writeYamlFile } from './write-yaml-file.js'
 import { YamlTypeJsonSchema } from './yaml-types/index.js'
@@ -39,7 +39,7 @@ async function defaultValue(value: any, defaultValue?: any, data?: any) {
   if (value == null) {
     value = defaultValue
   } else if (typeof value === 'object' && defaultValue && typeof defaultValue === 'object') {
-    value = {...defaultValue, ...value}
+    value = defaultsDeep({}, value, defaultValue)
   }
 
   if (data) {
