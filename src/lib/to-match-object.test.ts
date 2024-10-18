@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {formatTemplate, formatObject, validateMatch} from './to-match-object.js';
 import { stripConsoleColor } from '@isdk/ai-tool';
+import { YamlTypeJsonSchema } from './yaml-types/json-schema.js';
 
 describe('validateMatch', async () => {
   it('should handle simple equality', async () => {
@@ -96,6 +97,15 @@ describe('validateMatch', async () => {
     const result = await validateMatch(actual, expected, { data });
     expect(result).toHaveLength(1)
     expect(stripConsoleColor(result![0])).toEqual('a: -wor+hel-d+lo');
+  });
+
+  it('should validate json-schema', async () => {
+    const actual = { name: 'hello', age: 12 };
+    const expected = YamlTypeJsonSchema.create({ type: 'object', properties: { name: { type: 'string' }, age: { type: 'number', minimum: 18 }} });
+    const data = { a: 'world' };
+    const result = await validateMatch(actual, expected, { data });
+    expect(result).toHaveLength(1)
+    expect(result![0]).match(/must be >= 18"/)
   });
 });
 
