@@ -16,6 +16,7 @@
     "@offline-ai/cli-common": "workspace:*",
     "@offline-ai/cli-plugin-core": "workspace:*",
     "ajv": "^8.17.1",
+    "ajv-keywords": "^5.1.0",
     "ansicolor": "^2.0.3",
     "color-json": "^3.0.5",
     "diff": "^7.0.0",
