@@ -166,6 +166,7 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
     }
   } else if (expected instanceof YamlTypeJsonSchema) {
     const valid = YamlTypeJsonSchema.validate(expected, actual)
+    console.log('🚀 ~ validateMatch ~ valid:', expected, valid)
     if (!valid) {
       const errors = YamlTypeJsonSchema.getErrors(expected)!
       // failedKeys.push(kStr + 'json schema validation failed: ' + errors.map(e => e.message).join('\n'))
@@ -183,5 +184,5 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
       failedKeys.push(key + ': ' + JSON.stringify(actual) + ' != ' + JSON.stringify(expected))
     }
   }
-  return failedKeys.length ? failedKeys : undefined
+  return failedKeys.length ? failedKeys : false
 }

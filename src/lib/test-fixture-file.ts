@@ -12,7 +12,7 @@ import { YamlTypeJsonSchema } from './yaml-types/index.js'
 const DefaultFixtrureExtname = '.fixture.yaml'
 
 export interface TestFixtureLogItem {
-  passed: boolean, input: any, actual: any, expected: any, reason?: string,
+  passed: boolean, input: any, actual: any, expected: any, reason?: string, expectedSchema?: any,
   error?: any,
   i: number,
   duration: number // ms
@@ -70,6 +70,11 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
   let failedCount = 0
   let passedCount = 0
   const _fixtureConfig = fixtureConfig
+  const scriptConfig = await getScriptDataByFilepath(scriptFilepath, userConfig)
+  if (scriptConfig.output) {
+    _fixtureConfig.outputSchema = defaultsDeep({}, _fixtureConfig.outputSchema, scriptConfig.output)
+  }
+
   // const testLogs: TestFixtureLogItem[] = []
   for (let i = 0; i < fixtures.length; i++) {
     fixtureConfig = cloneDeep(_fixtureConfig)
@@ -83,8 +88,8 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
     const output = await defaultValue(fixtures[i].output, fixtureConfig?.output, fixture)
-    if (output == null && !userConfig.generateOutput) {
-      thisCmd.error(`fixture[${i}] missing output for the fixture file: ` + fixtureFilepath)
+    if (output == null && !userConfig.generateOutput && !fixture.outputSchema && !fixtureConfig.outputSchema) {
+      thisCmd.error(`fixture[${i}] missing output or outputSchema for the fixture file: ` + fixtureFilepath)
     }
     fixtureConfig = await formatObject(fixtureConfig, {data: {...input, ...fixtureConfig}, input: fixture})
     userConfig.data = await formatObject({...input}, {data: {...input, fixtureConfig}, input: fixture})
@@ -99,24 +104,35 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       if (LogLevelMap[userConfig.logLevel] >= LogLevelMap.info && result?.content) {
         result = result.content
       }
-      if (output == null) {
+      if (output == null && userConfig.generateOutput) {
         fixture.output = result
         thisCmd.log(`Without output: write the result as output`)
         await writeYamlFile(fixtureFilepath, fixtures)
-        continue
       }
+
       let failed = false
       let expected = output
       const actual = result
       let error
       const isResultStr = typeof result === 'string'
 
-      let failedKeys = fixture.outputSchema ? (await validateMatch(actual, YamlTypeJsonSchema.create(fixture.outputSchema), {data, input: fixture})) : undefined;
-      if (failedKeys) {
-        failed = true
-        error = `JSON Schema MisMatch:\n    ${failedKeys.join('\n    ')}`
+      let failedKeys: string[]|false|undefined
+
+      const checkSchema = userConfig.checkSchema ?? fixtureConfig.checkSchema
+      let expectedSchema: any
+
+      if (checkSchema !== false) {
+        expectedSchema = defaultsDeep ({}, fixture.outputSchema, fixtureConfig.outputSchema)
+        if (expectedSchema.type) {
+          failedKeys = await validateMatch(actual, YamlTypeJsonSchema.create(expectedSchema), {data, input: fixture})
+        }
+        if (failedKeys) {
+          failed = true
+          error = `JSON Schema MisMatch:\n    ${failedKeys.join('\n    ')}`
+        }
       }
-      if (!failed) {
+
+      if (!failed && expected !== undefined) {
         failedKeys = await validateMatch(actual, expected, {data, input: fixture})
         if (failedKeys) {
           failed = true
@@ -124,13 +140,16 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         }
       }
 
+      // no any validateMatch() be executed.
+      if (failedKeys === undefined) { continue }
+
       const reason = !isResultStr ? getReasonValue(result) : undefined
       if (!isResultStr) {
         // if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
-      expected =  await formatObject(expected, {data, input: fixture})
-      const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i, duration}
+      expected = await formatObject(expected, {data, input: fixture})
+      const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i, duration, expectedSchema}
       if (error) {testLog.error = error}
       if (reason) {testLog.reason = reason}
 
@@ -251,4 +270,15 @@ export async function loadTestFixtureFile(fixtureFilepath: string, userConfig: a
   }
 
   return { scriptIds, fixtures, skips, fixtureInfo, userConfig, fixtureFilepath }
+}
+
+async function getScriptInfoByFilepath(filepath: string, userConfig: any) {
+  const id = path.basename(filepath, getMultiLevelExtname(filepath, 2))
+  const scriptInfos = await AIScriptEx.getMatchedScriptInfos(id, {searchPaths: userConfig.agentDirs})
+  return scriptInfos[id]
+}
+
+async function getScriptDataByFilepath(filepath: string, userConfig: any) {
+  const info = await getScriptInfoByFilepath(filepath, userConfig)
+  return info?.data
 }
