@@ -118,7 +118,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
 
       let failedKeys: string[]|false|undefined
 
-      const checkSchema = fixture.checkSchema ?? userConfig.checkSchema ?? fixtureConfig.checkSchema
+      const checkSchema = userConfig.checkSchema ?? fixture.checkSchema ?? fixtureConfig.checkSchema
       let expectedSchema: any
 
       if (checkSchema !== false) {
