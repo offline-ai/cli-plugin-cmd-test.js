@@ -111,10 +111,17 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       let error
       const isResultStr = typeof result === 'string'
 
-      const failedKeys = await validateMatch(actual, expected, {data, input: fixture})
+      let failedKeys = fixture.outputSchema ? (await validateMatch(actual, YamlTypeJsonSchema.create(fixture.outputSchema), {data, input: fixture})) : undefined;
       if (failedKeys) {
         failed = true
-        error = `MisMatch:\n    ${failedKeys.join('\n    ')}`
+        error = `JSON Schema MisMatch:\n    ${failedKeys.join('\n    ')}`
+      }
+      if (!failed) {
+        failedKeys = await validateMatch(actual, expected, {data, input: fixture})
+        if (failedKeys) {
+          failed = true
+          error = `MisMatch:\n    ${failedKeys.join('\n    ')}`
+        }
       }
 
       const reason = !isResultStr ? getReasonValue(result) : undefined
