@@ -78,7 +78,7 @@ AnswerPattern: /The Answer is {{answer}}.$/
   answer: 42
 ```
 
-Input/Output 模板示例:
+### Input/Output 模板示例
 
 ```yaml
 ---
@@ -94,25 +94,33 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
-`output`使用`JSON-Schema`对输入进行校验
+### 用 JSON Schema 验证
+
+* 如果在PPE脚本中使用了`output`约定，测试会自动使用该`output`作为`JSON-Schema`对输出进行校验。
+* 在测试中可以`outputSchema`使用`JSON-Schema`对输入进行校验
+* 在测试中可以使用`checkSchema`来临时禁用`JSON-Schema`校验，默认为 `true`。
+* 也可在命令行中禁用`JSON-Schema`校验： `ai test --no-checkSchema`
+* `checkSchema` 的优先级为： `命令行参数 > fixture item > fixture front-matter > 默认值`
 
 ```yaml
 ---
 description: 'This is a AI test fixtures file'
+checkSchema: false # 可以禁用`JSON-Schema`校验，默认为 true
 ---
 - input: # 输入内容
     content: '{{content}}'
     ...
-  output: !json-schema
+  outputSchema:
     type: object
     properties:
       name:
         type: string
-        pattern: "^First"
+        pattern: "^First" # or use non-standard regexp: /^First/i
         minLength: 2
       age:
         type: number
         minimum: 18
+  checkSchema: false # 也可在fixture item中临时禁用`JSON-Schema`校验
 ```
 
 ## 测试开关
@@ -132,4 +140,10 @@ description: 'This is a AI test fixtures file'
 
    ```bash
    ai test "[basename].fixture.yaml" --generateOutput
+   ```
+
+3. **禁用`JSON-Schema`校验** 启用该开关(`--no-checkSchema`)，将禁用`JSON-Schema`校验。
+
+   ```bash
+   ai test "[basename].fixture.yaml" --no-checkSchema
    ```

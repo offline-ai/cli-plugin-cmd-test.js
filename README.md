@@ -10,17 +10,19 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [File Naming Conventions](#file-naming-conventions)
-- [Run test](#run-test)
-  - [Template Data](#template-data)
-  - [`output` uses `JSON-Schema` to validate the input](#output-uses-json-schema-to-validate-the-input)
-- [Generate Output](#generate-output)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test [FILE]`](#ai-test-file)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [File Naming Conventions](#file-naming-conventions)
+* [Run test](#run-test)
+* [Front-matter configurations:](#front-matter-configurations)
+* [(Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename](#optional-forcefully-specify-the-ppe-script-filename-to-run-ignoring-the-conventionally-agreed-ppe-filename)
+* [the test fixture item:](#the-test-fixture-item)
+* [declare the template data varaibles which can be used in the test:](#declare-the-template-data-varaibles-which-can-be-used-in-the-test)
+* [the varaiable can be a template string too.](#the-varaiable-can-be-a-template-string-too)
+* [the test fixture item:](#the-test-fixture-item)
+* [Generate Output](#generate-output)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Quick Start
@@ -121,26 +123,33 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
-## `output` uses `JSON-Schema` to validate the input
+### JSON Schema Validation
+
+* If the `output` convention is used in the PPE script, the test will automatically use this `output` as a `JSON-Schema` to validate the output.
+* In tests, you can use `outputSchema` to validate the input with a `JSON-Schema`.
+* In tests, you can use `checkSchema` to temporarily disable `JSON-Schema` validation, which defaults to `true`.
+* You can also disable `JSON-Schema` validation via the command line: `ai test --no-checkSchema`.
+* The priority of `checkSchema` is: `command-line argument > fixture item > fixture front-matter > default value`.
 
 ```yaml
 ---
-description: 'This is a AI test fixtures file'
+description: 'This is an AI test fixtures file'
+checkSchema: false # Can disable `JSON-Schema` validation, default is true
 ---
-- input:
+- input: # Input content
     content: '{{content}}'
     ...
-  output: !json-schema
+  outputSchema:
     type: object
     properties:
       name:
         type: string
-        pattern: "^First"
+        pattern: "^First" # or use non-standard regexp: /^First/i
         minLength: 2
       age:
         type: number
         minimum: 18
-```
+  checkSchema: false # Can also temporarily disable `JSON-Schema` validation in the fixture item
 
 # Generate Output
 
@@ -183,7 +192,7 @@ FLAGS
   -a, --arguments=<value>              the json data which will be passed to the ai-agent script
   -b, --brainDir=<value>               the brains(LLM) directory
   -d, --dataFile=<value>               the data file which will be passed to the ai-agent script
-  -e, --streamEcho=<option>            [default: line] stream echo mode, defaults to true
+  -e, --streamEcho=<option>            [default: line] stream echo mode
                                        <options: true|false|line>
   -f, --script=<value>                 the ai-agent script file name or id
   -i, --[no-]interactive               interactive mode
@@ -232,7 +241,7 @@ USAGE
     [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
     [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
     <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
-    [-i <value>...] [-x <value>...] [-g] [-c <value>]
+    [-i <value>...] [-x <value>...] [-g] [-c <value>] [--checkSchema]
 
 ARGUMENTS
   FILE  the test fixtures file path
@@ -269,6 +278,7 @@ FLAGS
   -x, --excludeIndex=<value>...        the index of the fixture to exclude from running
       --apiKey=<value>                 the api key (optional)
       --[no-]banner                    show banner
+      --[no-]checkSchema               Whether check JSON schema of output
       --config=<value>                 the config file
       --[no-]consoleClear              Whether console clear after stream output, default to true in interactive, false
                                        to non-interactive
