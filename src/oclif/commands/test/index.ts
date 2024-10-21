@@ -58,7 +58,11 @@ export default class RunTest extends AICommand {
       char: 'c', description: 'The number of times to run the test case to check if the results are consistent with the previous run, and to record the counts of matching and non-matching results',
       default: 1,
     }),
-    checkSchema: Flags.boolean({char: 'S', description: 'check JSON schema of output', default: true}),
+    checkSchema: Flags.boolean({
+      description: 'Whether check JSON schema of output',
+      aliases: ['checkschema', 'check-schema'],
+      default: true, allowNo: true,
+    }),
   }
 
   log(level: LogLevel, ...args: any[]) {
