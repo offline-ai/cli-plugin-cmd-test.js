@@ -159,6 +159,7 @@ checkSchema: false # 可以禁用`JSON-Schema`校验，默认为 true
 
 ```yaml
 ---
+# 默认期望的JSON-SCHEMA
 outputSchema:
   type: "string",
   format: "date",
@@ -177,6 +178,7 @@ outputSchema:
     echo: "2016-12-27"
 - input:
     echo: "abc"
+```
 
 ## 测试开关
 
