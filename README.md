@@ -123,7 +123,7 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
-### JSON Schema Validation
+## JSON Schema Validation
 
 * If the `output` convention is used in the PPE script, the test will automatically use this `output` as a `JSON-Schema` to validate the output.
 * In tests, you can use `outputSchema` to validate the input with a `JSON-Schema`.
@@ -157,6 +157,62 @@ Enable this `-g` or `--generateOutput` flag. It will use the output of the scrip
 
 ```bash
 ai test "[basename].fixture.yaml" --generateOutput
+```
+
+### Defined String Formats for JSON Schema
+
+- _date_: full-date according to [RFC3339](http://tools.ietf.org/html/rfc3339#section-5.6).
+- _time_: time (time-zone is mandatory).
+- _date-time_: date-time (time-zone is mandatory).
+- _iso-time_: time with optional time-zone.
+- _iso-date-time_: date-time with optional time-zone.
+- _duration_: duration from [RFC3339](https://tools.ietf.org/html/rfc3339#appendix-A)
+- _uri_: full URI.
+- _uri-reference_: URI reference, including full and relative URIs.
+- _uri-template_: URI template according to [RFC6570](https://tools.ietf.org/html/rfc6570)
+- _url_ (deprecated): [URL record](https://url.spec.whatwg.org/#concept-url).
+- _email_: email address.
+- _hostname_: host name according to [RFC1034](http://tools.ietf.org/html/rfc1034#section-3.5).
+- _ipv4_: IP address v4.
+- _ipv6_: IP address v6.
+- _regex_: tests whether a string is a valid regular expression by passing it to RegExp constructor.
+- _uuid_: Universally Unique IDentifier according to [RFC4122](http://tools.ietf.org/html/rfc4122).
+- _json-pointer_: JSON-pointer according to [RFC6901](https://tools.ietf.org/html/rfc6901).
+- _relative-json-pointer_: relative JSON-pointer according to [this draft](http://tools.ietf.org/html/draft-luff-relative-json-pointer-00).
+- _byte_: base64 encoded data according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _int32_: signed 32 bits integer according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _int64_: signed 64 bits according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _float_: float according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _double_: double according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _password_: password string according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+- _binary_: binary string according to the [openApi 3.0.0 specification](https://spec.openapis.org/oas/v3.0.0#data-types)
+
+#### Keywords to compare values: `formatMaximum` / `formatMinimum` and `formatExclusiveMaximum` / `formatExclusiveMinimum`
+
+These keywords allow to define minimum/maximum constraints when the format keyword defines.
+
+These keywords apply only to strings.
+
+```yaml
+---
+outputSchema:
+  type: "string",
+  format: "date",
+  formatMinimum: "2016-02-06",
+  formatExclusiveMaximum: "2016-12-27",
+---
+# valid Data:
+- input:
+    echo: "2016-02-06"
+- input:
+    echo: "2016-12-26"
+# invalid Data:
+- input:
+    echo: "2016-02-05"
+- input:
+    echo: "2016-12-27"
+- input:
+    echo: "abc"
 ```
 
 # Commands
