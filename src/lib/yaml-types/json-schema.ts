@@ -1,11 +1,14 @@
 import { Ajv, ValidateFunction } from "ajv"
 import ajvKeywords from 'ajv-keywords'
+import ajvFormats from 'ajv-formats'
 import { createYamlObjectTag, YamlTypeBaseObject } from "@isdk/ai-tool";
 
 const ajv = new Ajv()
 
 // @ts-expect-error "typeof ajvKeywords"
-ajvKeywords(ajv, "regexp");
+ajvKeywords(ajv);
+// @ts-expect-error "typeof ajvFormats"
+ajvFormats(ajv)
 
 const ValidateSymbol = Symbol('validate')
 
