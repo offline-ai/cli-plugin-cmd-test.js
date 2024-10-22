@@ -123,6 +123,11 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
+Default template data:
+
+* `__script_dir__`: the current script file directory.
+* `__fixture_dir__`: the fixture file directory.
+
 ## JSON Schema Validation
 
 * If the `output` convention is used in the PPE script, the test will automatically use this `output` as a `JSON-Schema` to validate the output.

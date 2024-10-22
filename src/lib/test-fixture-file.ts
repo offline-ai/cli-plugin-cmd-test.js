@@ -70,6 +70,8 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
   let failedCount = 0
   let passedCount = 0
   const _fixtureConfig = fixtureConfig
+  const fixtureDir = path.dirname(path.resolve(fixtureFilepath))
+  const scriptDir = path.dirname(path.resolve(scriptFilepath))
   const scriptConfig = await getScriptDataByFilepath(scriptFilepath, userConfig)
   if (scriptConfig.output) {
     _fixtureConfig.outputSchema = defaultsDeep({}, _fixtureConfig.outputSchema, scriptConfig.output)
@@ -79,6 +81,8 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
   for (let i = 0; i < fixtures.length; i++) {
     fixtureConfig = cloneDeep(_fixtureConfig)
     const fixture = cloneDeep(fixtures[i])
+    fixture.__fixture_dir__ = fixtureDir
+    fixture.__script_dir__  = scriptDir
     if (skips[i] || fixture.skip) {
       continue
     }

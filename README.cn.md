@@ -59,6 +59,11 @@ npm install -g @offline-ai/cli
 
 * Fixture Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
 
+Default template data:
+
+* `__script_dir__`: the current script file directory.
+* `__fixture_dir__`: the fixture file directory.
+
 ### 模板数据变量示例
 
 ```yaml
