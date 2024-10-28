@@ -221,12 +221,26 @@ export async function loadTestFixtureFile(fixtureFilepath: string, userConfig: a
 
   const scriptIds: string[] = []
 
-  let scripts = fixtureInfo.data.script || fixtureInfo.data.scripts
+  let scripts: string[] = userConfig.script
+  if (scripts) {
+    scripts = [scripts as any]
+    const t = fixtureInfo.data.script || fixtureInfo.data.scripts
+    if (t) {
+      if (Array.isArray(t)) {scripts.push(...t)} else {scripts.push(t)}
+    }
+  } else {
+    scripts = fixtureInfo.data.script || fixtureInfo.data.scripts
+  }
+
   if (scripts) {
     scripts = Array.isArray(scripts) ? scripts : [scripts]
-    scripts.forEach((script: string) => {
+    // filter duplicated items
+    scripts.filter((item, ix, arr)=>arr.indexOf(item) === ix)
+    .forEach((script: string) => {
       const scriptFilepath = expandPath(script, userConfig)
-      scriptIds.push(scriptFilepath)
+      if (!scriptIds.includes(scriptFilepath)) {
+        scriptIds.push(scriptFilepath)
+      }
     })
   } else {
     // thisCmd.error('missing script to run! the script option should be in the fixture file: ' + script)

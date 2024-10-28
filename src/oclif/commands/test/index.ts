@@ -77,15 +77,15 @@ export default class RunTest extends AICommand {
     // console.log('🚀 ~ RunScript ~ run ~ flags:', flags)
     const isJson = this.jsonEnabled()
 
-    if (!flags.script) {
-      flags.script = args.file
-    }
+    // if (!flags.script) {
+    //   flags.script = args.file
+    // }
 
     const userConfig = await this.loadConfig(flags.config, opts)
     this.logLevel = userConfig.logLevel = userConfig.logLevel ?? 'warn'
     logLevel.json = isJson
     const hasBanner = userConfig.banner ?? userConfig.interactive
-    const fixtureFilename = userConfig.script
+    const fixtureFilename = args.file
     if (!fixtureFilename) {
       this.error('missing fixture file to run! require argument: `-f <fixture_file_name>`')
     }
