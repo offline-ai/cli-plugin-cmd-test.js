@@ -99,6 +99,23 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
+### `Diff` 验证字符串
+
+使用`diff`可以对字符串进行补充验证
+
+```yaml
+---
+description: 'This is a AI test fixtures file'
+---
+- input: # 输入内容
+    content: '{{content}}'
+    ...
+  output: “这是应该输出的内容”
+  diff:
+    - add: true # 允许额外添加的空行
+      value: '\n'
+```
+
 ### 用 JSON Schema 验证
 
 * 如果在PPE脚本中使用了`output`约定，测试会自动使用该`output`作为`JSON-Schema`对输出进行校验。

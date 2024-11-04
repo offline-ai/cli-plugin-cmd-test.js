@@ -7,9 +7,13 @@
 import { getKeysPath, isRegExp, PromptTemplate, PromptTemplateOptions, toRegExp } from '@isdk/ai-tool'
 import { get as getByPath, omit, set as setByPath } from 'lodash-es'
 import colors from 'ansicolor'
-import { diffChars } from 'diff'
+import { Change, diffChars } from 'diff'
 
 import { YamlTypeJsonSchema } from './yaml-types/index.js'
+
+interface DiffChange extends Change {
+  verified?: boolean
+}
 
 // // allows using expect.extend instead of chai.use to extend plugins
 // chai.use(JestExtend)
@@ -140,12 +144,41 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
   } else if (vType === 'string') {
     if (typeof actual !== 'string' || !actual.includes(expected.trim())) {
       if (typeof actual === 'string') {
-        const diff = diffChars(expected, actual)
-        // const diffStr = diff.map(d => d.added ? `+${d.value}` : d.removed ? `-${d.value}` : d.value).join('')
-        const diffStr = diff.map(d =>
-          d.added ? colors.green('+'+d.value) :
-          d.removed ? colors.red('-'+d.value) : colors.darkGray(d.value)).join('')
-        failedKeys.push(kStr + diffStr)
+        let diff: DiffChange[]|undefined = diffChars(expected, actual)
+
+        const expectedDiff = input?.diff
+        if (Array.isArray(expectedDiff)) {
+          await formatDiffList(expectedDiff, options)
+          const successfulItems = diff.filter(d => findDiffItem(expectedDiff, d, options))
+          if (successfulItems.length < diff.length) {
+            successfulItems.forEach(d => {d.verified = true})
+          } else {
+            diff = undefined
+          }
+        } else if (typeof expectedDiff === 'function') {
+          const successfulItems = await expectedDiff(actual, input, diff)
+          if (successfulItems.length < diff.length) {
+            successfulItems.forEach(d => {d.verified = true})
+          } else {
+            diff = undefined
+          }
+        }
+        if (diff && diff.length) {
+          // process.exit()
+          // const diffStr = diff.map(d => d.added ? `+${d.value}` : d.removed ? `-${d.value}` : d.value).join('')
+          const diffStr = diff.map(d => {
+            const changed = d.added || d.removed || d.verified
+            const value = changed ? JSON.stringify(d.value) : d.value
+            let result = d.added ? colors.green('+'+value) :
+              d.removed ? colors.red('-'+value) : colors.darkGray(value)
+
+            if (d.verified) {
+              result = colors.white('✓('+ result + ')')
+            }
+            return result
+          }).join('')
+          failedKeys.push(kStr + diffStr)
+        }
       } else {
         failedKeys.push(kStr + JSON.stringify(actual) + ' != ' + JSON.stringify(expected))
       }
@@ -184,4 +217,39 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
     }
   }
   return failedKeys.length ? failedKeys : false
+}
+
+async function formatDiffList(diff: DiffChange[], options: MatchValueOptions) {
+  for (const d of diff) {
+    const value = d.value
+    if (isRegExp(value)) {
+      d.value = await formatTemplate(toRegExp(value), {...options, templateFormat: options.data?.templateFormat})
+    }
+  }
+  return diff
+}
+
+function findDiffItem(diff: DiffChange[], item: DiffChange, options: MatchValueOptions) {
+  let result: Change|undefined
+  for (const d of diff) {
+    const unchanged = !(item.added || item.removed)
+    if (unchanged && (d.added !== false && d.removed !== false)) {continue}
+    if (d.added != null && d.added !== item.added) {continue}
+    if (d.removed != null && d.removed !== item.removed) {continue}
+
+    result = item
+
+    const value = d.value
+    if (value != null) {
+      if (isRegExp(value)) {
+        const regEx = toRegExp(value)
+        if (!regEx.test(item.value)) { result = undefined }
+      } else if (!item.value.includes(value)) {
+        result = undefined
+      }
+    }
+
+    if (result) {break}
+  }
+  return result
 }

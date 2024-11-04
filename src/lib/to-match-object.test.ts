@@ -8,14 +8,14 @@ describe('validateMatch', async () => {
     const actual = 10;
     const expected = 10;
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle string equality', async () => {
     const actual = 'hello';
     const expected = 'hello';
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle string inequality', async () => {
@@ -23,14 +23,14 @@ describe('validateMatch', async () => {
     const expected = 'world';
     const result = await validateMatch(actual, expected);
     expect(result).toHaveLength(1)
-    expect(stripConsoleColor(result![0])).toEqual('-wor+hel-d+lo');
+    expect(stripConsoleColor(result![0])).toEqual('-"wor"+"he"l-"d"+"lo"');
   });
 
   it('should handle regex matching', async () => {
     const actual = 'hello world';
     const expected = /hello/;
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle regex non-matching', async () => {
@@ -44,7 +44,7 @@ describe('validateMatch', async () => {
     const actual = [1, 2, 3];
     const expected = [1, 2, 3];
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle array inequality', async () => {
@@ -58,7 +58,7 @@ describe('validateMatch', async () => {
     const actual = { a: 1, b: 2 };
     const expected = { a: 1, b: 2 };
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle object inequality', async () => {
@@ -72,7 +72,7 @@ describe('validateMatch', async () => {
     const actual = { a: { b: 1, c: 2 }, d: 3 };
     const expected = { a: { b: 1, c: 2 }, d: 3 };
     const result = await validateMatch(actual, expected);
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle nested object inequality', async () => {
@@ -87,7 +87,7 @@ describe('validateMatch', async () => {
     const expected = { a: '{{ a }}' };
     const data = { a: 'hello' };
     const result = await validateMatch(actual, expected, { data });
-    expect(result).toBeUndefined();
+    expect(result).toBeFalsy();
   });
 
   it('should handle template string non-matching', async () => {
@@ -96,7 +96,7 @@ describe('validateMatch', async () => {
     const data = { a: 'world' };
     const result = await validateMatch(actual, expected, { data });
     expect(result).toHaveLength(1)
-    expect(stripConsoleColor(result![0])).toEqual('a: -wor+hel-d+lo');
+    expect(stripConsoleColor(result![0])).toEqual('a: -"wor"+"he"l-"d"+"lo"');
   });
 
   it('should validate json-schema', async () => {
@@ -106,6 +106,15 @@ describe('validateMatch', async () => {
     const result = await validateMatch(actual, expected, { data });
     expect(result).toHaveLength(1)
     expect(result![0]).match(/must be >= 18"/)
+  });
+
+  it('should validate diff', async () => {
+    const actual = '它的建筑阴影非常少，\n 吉尔安慰自己说、';
+    const expected = '它的建筑阴影非常少，吉尔安慰(wèi)自己说';
+    const options = { input: {diff: [{value: '\n'}, {removed: true, value: '(wèi)'}, {added: true, value: '、'}]} };
+    const result = await validateMatch(actual, expected, options );
+    expect(result).toHaveLength(1)
+    expect(stripConsoleColor(result![0])).toEqual('它的建筑阴影非常少，✓(+"\\n ")吉尔安慰✓(-"(wèi)")自己说✓(+"、")');
   });
 });
 
