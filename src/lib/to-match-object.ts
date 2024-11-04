@@ -4,7 +4,7 @@
 //   JestChaiExpect,
 //   JestExtend,
 // } from '@vitest/expect'
-import { getKeysPath, isRegExp, PromptTemplate, PromptTemplateOptions, toRegExp } from '@isdk/ai-tool'
+import { getKeysPath, isRegExp, PromptTemplate, PromptTemplateOptions, stripConsoleColor, toRegExp } from '@isdk/ai-tool'
 import { get as getByPath, omit, set as setByPath } from 'lodash-es'
 import colors from 'ansicolor'
 import { Change, diffChars } from 'diff'
@@ -152,6 +152,10 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
           const successfulItems = diff.filter(d => findDiffItem(expectedDiff, d, options))
           if (successfulItems.length < diff.length) {
             successfulItems.forEach(d => {d.verified = true})
+            const failedCount = diff.filter(d => !d.verified && (d.added || d.removed)).length
+            if (failedCount === 0) {
+              diff = undefined
+            }
           } else {
             diff = undefined
           }
@@ -159,6 +163,10 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
           const successfulItems = await expectedDiff(actual, input, diff)
           if (successfulItems.length < diff.length) {
             successfulItems.forEach(d => {d.verified = true})
+            const failedCount = diff.filter(d => !d.verified && (d.added || d.removed)).length
+            if (failedCount === 0) {
+              diff = undefined
+            }
           } else {
             diff = undefined
           }
@@ -173,7 +181,7 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
               d.removed ? colors.red('-'+value) : colors.darkGray(value)
 
             if (d.verified) {
-              result = colors.white('✓('+ result + ')')
+              result = colors.white('✓('+ stripConsoleColor(result) + ')')
             }
             return result
           }).join('')
