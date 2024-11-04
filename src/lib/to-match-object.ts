@@ -252,7 +252,7 @@ function findDiffItem(diff: DiffChange[], item: DiffChange, options: MatchValueO
       if (isRegExp(value)) {
         const regEx = toRegExp(value)
         if (!regEx.test(item.value)) { result = undefined }
-      } else if (!item.value.includes(value)) {
+      } else if (item.value !== value) {
         result = undefined
       }
     }

@@ -111,11 +111,11 @@ describe('validateMatch', async () => {
   it('should validate diff', async () => {
     const actual = '它的建筑阴影非常少，\n 吉尔安慰自己说、';
     const expected = '它的建筑阴影非常少，吉尔安慰(wèi)自己说';
-    const options = { input: {diff: [{value: '\n'}, {removed: true, value: '(wèi)'}, {added: true, value: '、'}]} };
+    const options = { input: {diff: [{value: '\n '}, {removed: true, value: '(wèi)'}, {added: true, value: '、'}]} };
     let result = await validateMatch(actual, expected, options );
     expect(result).toBeFalsy()
     result = await validateMatch(actual, '它的建筑阴yǐng非常少，吉尔安慰(wèi)自己说', options );
-    expect(stripConsoleColor(result![0])).toEqual('它的建筑阴-"yǐng"+"影"非常少，✓(+"\n ")吉尔安慰✓(-"(wèi)")自己说✓(+"、")');
+    expect(stripConsoleColor(result![0])).toEqual('它的建筑阴-"yǐng"+"影"非常少，✓(+"\\n ")吉尔安慰✓(-"(wèi)")自己说✓(+"、")');
   });
 });
 
