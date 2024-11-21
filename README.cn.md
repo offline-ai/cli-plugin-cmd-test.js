@@ -145,6 +145,53 @@ checkSchema: false # 可以禁用`JSON-Schema`校验，默认为 true
   checkSchema: false # 也可在fixture item中临时禁用`JSON-Schema`校验
 ```
 
+#### JSON Schema 的 Keywords 扩展
+
+* number 类型的扩展keywords:
+  * `range` and `exclusiveRange`:
+    * 语法糖，用于组合 minimum 和 maximum 关键词（或 exclusiveMinimum 和 exclusiveMaximum）。如果范围内没有数字，也会导致模式编译失败。
+    * 示例：range: [1, 3] 表示数字必须在 1 到 3 之间。
+* string 类型的扩展keywords:
+  * `regexp`:
+    * 可以是正则表达式字符串或对象。
+    * 示例：`"/foo/i"`, 或 `{pattern: "bar", flags: "i"}`
+  * `transform`: 用于对字符串进行转换。
+    * 示例：`["trim", "toLowerCase"]`
+    * `trim`: 去除字符串首尾的空白字符。
+    * `trimStart`/`trimLeft`: 去除字符串开头的空白字符。
+    * `trimEnd`/`trimRight`: 去除字符串末尾的空白字符。
+    * `toLowerCase`: 转换为小写。
+    * `toUpperCase`: 转换为大写。
+    * `toEnumCase`: 将字符串转换为与模式中的 enum 值之一相匹配的大小写形式。
+      * 示例：`transform: ["trim", "toEnumCase"], enum: ["pH"],`
+* array:
+  * `uniqueItemProperties`: 检查数组项中某些属性是否唯一。
+* objects:
+  * `allRequired`:布尔值，要求所有在 properties 关键词中定义的属性都必须存在。
+  * `anyRequired`:  要求列表中的任意一个属性（至少一个）必须存在。 示例：`anyRequired: ["foo", "bar"],`
+  * `oneRequired`: 要求列表中的仅有一个属性必须存在。
+  * `patternRequired`: 要求存在与某些正则模式匹配的属性。 示例：`patternRequired: ["f.*o", "b.*r"],`
+  * `prohibited`: 禁止列表中的任何属性存在于对象中。
+  * `deepProperties`:  验证深层属性（通过 JSON path）。示例：
+
+    ```js
+    deepProperties: {
+      "/users/1/role": {enum: ["admin"]},
+    },
+    ```
+
+  * `deepRequired`: 检查某些深层属性（通过 JSON path）是否存在。 `deepRequired: ["/users/1/role"],`
+  * `dynamicDefaults`:  允许为属性分配动态默认值，如时间戳、唯一 ID 等。
+    * 仅在使用 `useDefaults` 选项且不在 `anyOf` 关键词等内部时生效。
+    * 预定义的动态默认函数：
+      * "timestamp" - 当前时间戳（毫秒）。
+      * "datetime" -当前日期和时间（ISO 格式）。
+      * "date" - 当前日期（ISO 格式）。
+      * "time" - 当前时间（ISO 格式）。
+      * "random" -  `[0, 1)` 区间内的伪随机数。
+      * "randomint" -  伪随机整数。如果属性值为字符串，则随机返回 0 或 1；如果属性值为对象 `{ func: 'randomint', args: { max: N } }`，则默认值为 `[0, N)` 区间内的整数。
+      * "seq" - 从 0 开始的顺序整数。
+
 #### JSON Schema 的字符串 `Format` 扩展
 
 - _date_: 根据 [RFC3339](http://tools.ietf.org/html/rfc3339#section-5.6) 的完整日期格式。

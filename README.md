@@ -18,6 +18,7 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
   - [Template Data](#template-data)
   - [`Diff` String Validation](#diff-string-validation)
   - [JSON Schema Validation](#json-schema-validation)
+    - [JSON Schema Keywords Extensions](#json-schema-keywords-extensions)
     - [Defined String Formats for JSON Schema](#defined-string-formats-for-json-schema)
       - [Keywords to compare values: `formatMaximum` / `formatMinimum` and `formatExclusiveMaximum` / `formatExclusiveMinimum`](#keywords-to-compare-values-formatmaximum--formatminimum-and-formatexclusivemaximum--formatexclusiveminimum)
 - [Commands](#commands)
@@ -180,6 +181,49 @@ Enable this `-g` or `--generateOutput` flag. It will use the output of the scrip
 ```bash
 ai test "[basename].fixture.yaml" --generateOutput
 ```
+
+### JSON Schema Keywords Extensions
+
+* number:
+  * `range` and `exclusiveRange`: `range: [1, 3]`
+    * Syntax sugar for the combination of minimum and maximum keywords (or exclusiveMinimum and exclusiveMaximum), also fails schema compilation if there are no numbers in the range.
+* string:
+  * `regexp`: `"/foo/i"`, `{pattern: "bar", flags: "i"}`
+  * `transform`: `["trim", "toLowerCase"]`
+    * `trim`: remove whitespace from start and end
+    * `trimStart`/`trimLeft`: remove whitespace from start
+    * `trimEnd`/`trimRight`: remove whitespace from end
+    * `toLowerCase`: convert to lower case
+    * `toUpperCase`: convert to upper case
+    * `toEnumCase`: change string case to be equal to one of `enum` values in the schema
+      * `transform: ["trim", "toEnumCase"], enum: ["pH"],`
+* array:
+  * `uniqueItemProperties`:  check that some properties in array items are unique.
+* objects:
+  * `allRequired`: boolean, require the presence of all properties used in properties keyword in the same schema object.
+  * `anyRequired`:  require the presence of any (at least one) property from the list. `anyRequired: ["foo", "bar"],`
+  * `oneRequired`:  require the presence of only one property from the list.
+  * `patternRequired`: require the presence of properties that match some pattern(s). `patternRequired: ["f.*o", "b.*r"],`
+  * `prohibited`: prohibit that any of the properties in the list is present in the object.
+  * `deepProperties`:  validate deep properties (identified by JSON pointers).
+
+    ```js
+    deepProperties: {
+      "/users/1/role": {enum: ["admin"]},
+    },
+    ```
+
+  * `deepRequired`: check that some deep properties (identified by JSON pointers) are available. `deepRequired: ["/users/1/role"],`
+  * `dynamicDefaults`:  allows to assign dynamic defaults to properties, such as timestamps, unique IDs etc.
+    * This keyword only works if `useDefaults` options is used and not inside `anyOf` keywords etc.
+    * predefined dynamic default functions:
+      * "timestamp" - current timestamp in milliseconds
+      * "datetime" - current date and time as string (ISO, valid according to date-time format)
+      * "date" - current date as string (ISO, valid according to date format)
+      * "time" - current time as string (ISO, valid according to time format)
+      * "random" - pseudo-random number in `[0, 1)` interval
+      * "randomint" - pseudo-random integer number. If string is used as a property value, the function will randomly return 0 or 1. If object `{ func: 'randomint', args: { max: N } }` is used then the default will be an integer number in `[0, N)` interval.
+      * "seq" - sequential integer number starting from 0.
 
 ### Defined String Formats for JSON Schema
 
