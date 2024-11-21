@@ -73,6 +73,7 @@ script: '[basename].ai.yaml'
   output: # the expected output to compare the script's output
     ...
     name: !re /^First/ # can be a regexp string to match
+  not: true   # Inverse match flag, if true, the test succeeds when the expected output does not match.
   skip: true  # Optional flag to skip the test
   only: true  # Optional flag to run only this test; only one of 'skip' or 'only' can be set, and 'only' takes precedence
 ```

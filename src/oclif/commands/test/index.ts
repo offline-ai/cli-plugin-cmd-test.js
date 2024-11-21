@@ -165,14 +165,15 @@ export default class RunTest extends AICommand {
         const expected = testLog.expected
         const expectedSchema = testLog.expectedSchema
         duration += testLog.duration
+        const sNot = testLog.not ? 'not': ''
         if (testLog.passed) {
           passedCount++
           totalPassed++
           this.log('warn', `👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason, ` time ${testLog.duration}ms`);
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
             this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-            if (expectedSchema !== undefined) {this.log('notice', '👍🔧 ~ expected JSON Schema:', cj(expectedSchema))}
-            if (expected !== undefined) {this.log('notice', '👍🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))}
+            if (expectedSchema !== undefined) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
+            if (expected !== undefined) {this.log('notice', '👍🔧 ' +sNot+ ' expected output:', typeof expected === 'string' ? expected : cj(expected))}
           }
         } else {
           failedCount++
@@ -180,8 +181,8 @@ export default class RunTest extends AICommand {
           this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
           this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
           this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-          if (expectedSchema !== undefined) {this.log('notice', '🔴🔧 ~ expected JSON Schema:', cj(expectedSchema))}
-          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ expected output:', typeof expected === 'string' ? expected : cj(expected))}
+          if (expectedSchema !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
+          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? expected : cj(expected))}
           if (testLog.error) this.log('notice', '🔴 ', testLog.error.message || testLog.error)
         }
       }

@@ -53,6 +53,7 @@ npm install -g @offline-ai/cli
    output: # 预期输出结果
      name: !re /^First/ # 可以是正则表达式字符串匹配
      ...
+   not: true   # 反向匹配标志，如果为真，当预期输出结果不匹配的时候，才测试成功
    skip: true  # 可选跳过标志
    only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
  ```

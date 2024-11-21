@@ -16,6 +16,7 @@ export interface TestFixtureLogItem {
   error?: any,
   i: number,
   duration: number // ms
+  not?: boolean
 }
 
 export interface TestFixtureFileResult {
@@ -153,7 +154,9 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
       expected = await formatObject(expected, {data, input: fixture})
+      if (fixture.not) {failed = !failed}
       const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i, duration, expectedSchema}
+      if (fixture.not) {testLog.not = true}
       if (error) {testLog.error = error}
       if (reason) {testLog.reason = reason}
 
