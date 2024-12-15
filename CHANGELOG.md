@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.0](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.26...v0.2.0) (2024-12-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* add checkSchema option and using the output in PPE script now
+
+### Features
+
+* add __script_dir__, __fixture_dir__ template data ([d9475a8](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/d9475a8e5cca9a8703f1a13f53aa329d8fde844f))
+* add "not" matcher to fixture test ([198e67f](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/198e67f7bf865fa17008c19da4bbccb914206eea))
+* add ajvFormats and all ajvKeywords ([9288eb6](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/9288eb6b359b3e188e7987d6a9a43c84cb755285))
+* add checkSchema option and using the output in PPE script now ([dfd113c](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/dfd113c2219a018d66f952b2c1ae942d0b613506))
+* add diff validation ([eb17b1b](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/eb17b1b92032c61c44a60bc85fda993d41f7b262))
+* add json-schema validate supports ([8bc1180](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/8bc118000ec79485a3884a80422964e6b0bc5204))
+* add outputSchema supports ([38b64dd](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/38b64dd6c8ed0282f40a9ffc14c0e67c6997b2da))
+* add regexp option to json schema ([ed7df41](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/ed7df41c0d04ca5392e5d8736a5d75e639d1b795))
+* Add the `--runCount(-c)` flag to repeatedly run the test case and check if the results are consistent with the previous run, while recording the counts of matching and non-matching results. ([4795d5c](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/4795d5c7fd11fb6aade332cb5d8b92adec68504d))
+* can specify the PPE script by -f to fixtures file ([2a4819a](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/2a4819a125ae9c548b676d9e804a55267e02f0b5))
+* the fixture item can disable the json-schema validation (checkSchema) now ([826bbf7](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/826bbf7c29938563ad13a4f49061fd8a318e4e80))
+
+
+### Bug Fixes
+
+* avoid custom property name confict ([cf20ec4](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/cf20ec4ddc639415ff0a3c6a154112a791f6e585))
+* command-line > fixture item > fixture front-matter > default value ([545b15d](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/545b15d1cdb09e0a64b285a5e3da9adb7130fa1d))
+* diff match ([6b16770](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/6b16770aa18efd74f3e324c50146d89f3f1e9dad))
+* should deep copy default value ([0f9ab8c](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/0f9ab8cdc38f7c04a99c670ee5048b737b049de9))
+* should display all actual output ([0fc0d0e](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/0fc0d0eaabd704ad0bc79fe34af18e2bc650a235))
+* string compare must be strict equ ([963d9b9](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/963d9b9a9b607846e2d2fc9cdc3f0f6f660ef549))
+
+
+### Refactor
+
+* extract stripConsoleColor to ai-tool ([6361767](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/6361767454ba96cc5a5254f955af8e5568febf98))
+* remove the shotcut of checkSchema ([5a442f2](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/5a442f2160d0e7089816c05d3ecb4701621d7191))
+
 ## [0.1.26](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.25...v0.1.26) (2024-10-07)
 
 ## [0.1.25](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.1.24...v0.1.25) (2024-10-06)
