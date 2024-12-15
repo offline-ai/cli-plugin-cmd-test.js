@@ -132,7 +132,7 @@ Default template data:
 
 ## `Diff` String Validation
 
-Using `diff` can validate and supplement string
+Using `diff` can help validate and supplement strings. For example, it allows the existence of extra blank lines. This ensures that when there are minor differences in the string results, they can still pass the validation.
 
 ```yaml
 ---

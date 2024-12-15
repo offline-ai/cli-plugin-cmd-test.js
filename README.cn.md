@@ -102,7 +102,8 @@ output: /The Answer is {{answer}}.$/i
 
 ### `Diff` 验证字符串
 
-使用`diff`可以对字符串进行补充验证
+使用`diff`可以对字符串进行补充验证。比如可以允许字符串中把助词"的"改为"地",允许存在额外的空行。
+使得当字符串结果存在这些少量的不同的时候，也能通过验证。
 
 ```yaml
 ---
@@ -113,8 +114,14 @@ description: 'This is a AI test fixtures file'
     ...
   output: “这是应该输出的内容”
   diff:
-    - add: true # 允许额外添加的空行
+    # 允许额外添加的空行
+    - add: true
       value: '\n'
+    # 允许将"的"改为"地"
+    - value: "的"
+      removed: true
+    - value: "地"
+      added: true
 ```
 
 ### 用 JSON Schema 验证
