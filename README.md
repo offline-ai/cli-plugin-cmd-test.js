@@ -10,20 +10,21 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [File Naming Conventions](#file-naming-conventions)
-- [Run test](#run-test)
-  - [Template Data](#template-data)
-  - [`Diff` String Validation](#diff-string-validation)
-  - [JSON Schema Validation](#json-schema-validation)
-    - [JSON Schema Keywords Extensions](#json-schema-keywords-extensions)
-    - [Defined String Formats for JSON Schema](#defined-string-formats-for-json-schema)
-      - [Keywords to compare values: `formatMaximum` / `formatMinimum` and `formatExclusiveMaximum` / `formatExclusiveMinimum`](#keywords-to-compare-values-formatmaximum--formatminimum-and-formatexclusivemaximum--formatexclusiveminimum)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test [FILE]`](#ai-test-file)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [File Naming Conventions](#file-naming-conventions)
+* [Run test](#run-test)
+* [Front-matter configurations:](#front-matter-configurations)
+* [(Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename](#optional-forcefully-specify-the-ppe-script-filename-to-run-ignoring-the-conventionally-agreed-ppe-filename)
+* [the test fixture item:](#the-test-fixture-item)
+* [declare the template data varaibles which can be used in the test:](#declare-the-template-data-varaibles-which-can-be-used-in-the-test)
+* [the varaiable can be a template string too.](#the-varaiable-can-be-a-template-string-too)
+* [the test fixture item:](#the-test-fixture-item)
+* [Generate Output](#generate-output)
+* [valid Data:](#valid-data)
+* [invalid Data:](#invalid-data)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Quick Start
@@ -295,10 +296,10 @@ outputSchema:
 ```
 USAGE
   $ ai run [FILE] [DATA] [--json] [--config <value>] [--banner] [-u <value>] [--apiKey <value>] [-s
-    <value>...] [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories
-    <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a
-    <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-C <value>] [-P <value>]
-    [--consoleClear]
+    <value>...] [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|print|silence]
+    [--histories <value>] [-n] [-k] [-t <value> -i] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D
+    <value>...] [-a <value>] [-b <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-C <value>]
+    [-P <value>] [--consoleClear]
 
 ARGUMENTS
   FILE  the script file path, or the json data when `-f` switch is set
@@ -321,7 +322,7 @@ FLAGS
   -i, --[no-]interactive               interactive mode
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|silence>
+                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|print|silence>
   -m, --[no-]stream                    stream mode, defaults to true
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
@@ -352,7 +353,7 @@ EXAMPLES
   │[info]:Start Script: ...
 ```
 
-_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.11/src/commands/run/index.ts)_
+_See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugin-core.js/blob/v0.8.12/src/commands/run/index.ts)_
 
 ## `ai test [FILE]`
 
@@ -361,8 +362,8 @@ _See code: [@offline-ai/cli-plugin-core](https://github.com/offline-ai/cli-plugi
 ```
 USAGE
   $ ai test [FILE] [--json] [--config <value>] [--banner] [-u <value>] [--apiKey <value>] [-s <value>...]
-    [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|silence] [--histories <value>] [-n]
-    [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
+    [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|print|silence] [--histories <value>]
+    [-n] [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
     <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
     [-i <value>...] [-x <value>...] [-g] [-c <value>] [--checkSchema]
 
@@ -390,7 +391,7 @@ FLAGS
   -i, --includeIndex=<value>...        the index of the fixture to run
   -k, --backupChat                     whether to backup chat history before start, defaults to false
   -l, --logLevel=<option>              the log level
-                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|silence>
+                                       <options: trace|debug|verbose|info|notice|warn|error|fatal|print|silence>
   -m, --[no-]stream                    stream mode, defaults to true
   -n, --[no-]newChat                   whether to start a new chat history, defaults to false in interactive mode, true
                                        in non-interactive
