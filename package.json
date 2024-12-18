@@ -1,7 +1,7 @@
 {
   "name": "@offline-ai/cli-plugin-cmd-test",
   "description": "Offline(local) AI Client Command to test Programable Prompt Engine script",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "author": "Riceball LEE <snowyu.lee@gmail.com>",
   "bin": {
     "ai": "./bin/run.js"
