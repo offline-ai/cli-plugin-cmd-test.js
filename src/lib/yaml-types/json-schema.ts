@@ -3,7 +3,7 @@ import ajvKeywords from 'ajv-keywords'
 import ajvFormats from 'ajv-formats'
 import { createYamlObjectTag, YamlTypeBaseObject } from "@isdk/ai-tool";
 
-const ajv = new Ajv()
+const ajv = new Ajv({strictSchema: false})
 
 // @ts-expect-error "typeof ajvKeywords"
 ajvKeywords(ajv);
