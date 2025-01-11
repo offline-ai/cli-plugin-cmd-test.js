@@ -43,15 +43,17 @@ async function defaultValue(value: any, defaultValue?: any, data?: any) {
     value = defaultsDeep({}, value, defaultValue)
   }
 
-  if (data) {
-    value = await formatObject(value, {data})
-  }
-  if (value && (!Array.isArray(value)) && typeof value === 'object') {
-    value = omitBy(value, (v, k) => v == null || (typeof v === 'string' && v.trim() === ''))
-  }
+  if (typeof value !== 'function'){
+    if (data) {
+      value = await formatObject(value, {data})
+    }
+    if (value && (!Array.isArray(value)) && typeof value === 'object') {
+      value = omitBy(value, (v, k) => v == null || (typeof v === 'string' && v.trim() === ''))
+    }
 
-  if (isYamlJsonSchema) {
-    value = YamlTypeJsonSchema.create(value)
+    if (isYamlJsonSchema) {
+      value = YamlTypeJsonSchema.create(value)
+    }
   }
 
   return value
@@ -153,7 +155,9 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         // if (!Array.isArray(actual) && typeof actual === 'object') {actual = omit(actual, ReasonNames)}
         if (!Array.isArray(expected) && typeof expected === 'object') {expected = omit(expected, ReasonNames)}
       }
-      expected = await formatObject(expected, {data, input: fixture})
+      if (typeof expected !== 'function'){
+        expected = await formatObject(expected, {data, input: fixture})
+      }
       if (fixture.not) {failed = !failed}
       const testLog: TestFixtureLogItem = {passed: !failed, input, actual, expected, i, duration, expectedSchema}
       if (fixture.not) {testLog.not = true}

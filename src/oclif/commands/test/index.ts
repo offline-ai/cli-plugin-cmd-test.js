@@ -162,10 +162,18 @@ export default class RunTest extends AICommand {
         const i = testLog.i
         const reason = testLog.reason ? `Reason: ${typeof testLog.reason === 'string' ? testLog.reason : cj(testLog.reason)}` : ''
         const actual = testLog.actual
-        const expected = testLog.expected
+        let expected = testLog.expected
         const expectedSchema = testLog.expectedSchema
         duration += testLog.duration
         const sNot = testLog.not ? 'not': ''
+        if (expected !== undefined) {
+          const vType= typeof expected
+          if (vType === 'function') {
+            expected = expected.toString()
+          } else if (vType === 'object') {
+            expected = cj(expected)
+          }
+        }
         if (testLog.passed) {
           passedCount++
           totalPassed++
@@ -173,7 +181,9 @@ export default class RunTest extends AICommand {
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
             this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
             if (expectedSchema !== undefined) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
-            if (expected !== undefined) {this.log('notice', '👍🔧 ' +sNot+ ' expected output:', typeof expected === 'string' ? expected : cj(expected))}
+            if (expected !== undefined) {
+              this.log('notice', '👍🔧 ' +sNot+ ' expected output:', expected)
+            }
           }
         } else {
           failedCount++
@@ -182,7 +192,7 @@ export default class RunTest extends AICommand {
           this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
           this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
           if (expectedSchema !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
-          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? expected : cj(expected))}
+          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', expected)}
           if (testLog.error) this.log('notice', '🔴 ', testLog.error.message || testLog.error)
         }
       }
