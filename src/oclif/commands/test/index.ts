@@ -193,7 +193,7 @@ export default class RunTest extends AICommand {
           this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
           if (expectedSchema !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
           if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', expected)}
-          if (testLog.error) this.log('notice', '🔴 ', testLog.error.message || testLog.error)
+          if (testLog.error) this.log('warn', '🔴 ', testLog.error.message || testLog.error)
         }
       }
       // this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
