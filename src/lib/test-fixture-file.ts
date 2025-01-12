@@ -112,7 +112,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
         result = result.content
       }
       if (output == null && userConfig.generateOutput) {
-        fixture.output = result
+        fixture.output = fixtures[i].output = result
         thisCmd.log(`Without output: write the result as output`)
         await writeYamlFile(fixtureFilepath, fixtures)
       }
