@@ -180,7 +180,7 @@ export default class RunTest extends AICommand {
           this.log('warn', `👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason, ` time ${testLog.duration}ms`);
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
             this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-            if (expectedSchema !== undefined) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
+            if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
             if (expected !== undefined) {
               this.log('notice', '👍🔧 ' +sNot+ ' expected output:', expected)
             }
@@ -191,7 +191,7 @@ export default class RunTest extends AICommand {
           this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
           this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
           this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
-          if (expectedSchema !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
+          if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
           if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', expected)}
           if (testLog.error) this.log('warn', '🔴 ', testLog.error.message || testLog.error)
         }
