@@ -203,7 +203,7 @@ export async function validateMatch(actual: any, expected: any, options: MatchVa
   } else if (vType === 'function') {
     const result = await expected(actual, input)
     if (result !== true) {
-      failedKeys.push(kStr + `the ${expected.toString()} function returned "${result}". The actual value: ${JSON.stringify(actual)}`)
+      failedKeys.push(kStr + `the ${expected.name || expected.toString()} custom function report error "${result}". The actual value: ${JSON.stringify(actual)}`)
     }
   } else if (expected instanceof YamlTypeJsonSchema) {
     const valid = YamlTypeJsonSchema.validate(expected, actual)

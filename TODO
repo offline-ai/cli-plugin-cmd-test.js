@@ -18,4 +18,12 @@ feats:
     * diff: 定义满足diff条件的分值，这个是一个数组(必须和diff数组一致)，或者直接放到diff中
     * outputSchema: 这个可以有满足某个对象的某个属性
     法二: !score 直接内置，但是如果output直接是简单值就无法内置，不过对简单值也无必要。或者约定 {score: 分值, value: 原来的期望匹配输出}
-
+    fixture项上的score，为该项的分值所占比值，默认为1，取值范围`(0-1]`。
+    测试项目有: output, outputSchema, diff
+    其中diff是output的补充(输出为字符串的时候)，而outputSchema是从输出结构以及部分值是否满足测试。和output的对象比较有重叠的地方。
+    在 output为对象时候，无法对output本身内置score,但是可以在outputSchema中内置分数.
+    而当output是string时，则可以在diff上打分。
+    当output是函数的时候，为自定义测试。这个应该在返回值上修改规范，表达分数。比如可以返回对象`{result: true|string, score: 0-1}|true|string`
+    在diff, outputSchema以及函数中的分值，取值范围`(0-1]`. 表示在该项中所占的比值。
+    score分值应该接受两种表达： 1. 0-100% 小于1的百分比值; 2. 动态分值，整数是一个相对分值，需要将该项目的所有分值统计，然后做归一化。
+    归一化就是将一组数据按比例缩放到一个固定范围内，使得它们的总和为一个特定值（如100%）。
