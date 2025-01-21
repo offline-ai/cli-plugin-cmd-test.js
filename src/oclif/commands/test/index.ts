@@ -1,5 +1,6 @@
 import path from 'path'
 import cj from 'color-json'
+import color from 'ansicolor'
 import { Args, Flags } from '@oclif/core'
 import { omit } from 'lodash-es'
 import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
@@ -179,10 +180,10 @@ export default class RunTest extends AICommand {
           totalPassed++
           this.log('warn', `👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason, ` time ${testLog.duration}ms`);
           if (LogLevelMap[level] <= LogLevelMap['notice']) {
-            this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+            this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
             if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
             if (expected !== undefined) {
-              this.log('notice', '👍🔧 ' +sNot+ ' expected output:', expected)
+              this.log('notice', '👍🔧 ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))
             }
           }
         } else {
@@ -190,9 +191,9 @@ export default class RunTest extends AICommand {
           totalFailed++
           this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
           this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
-          this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? actual : cj(actual));
+          this.log('notice', '🔴🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
           if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
-          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', expected)}
+          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))}
           if (testLog.error) this.log('warn', '🔴 ', testLog.error.message || testLog.error)
         }
       }
