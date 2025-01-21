@@ -89,12 +89,12 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
     if (skips[i] || fixture.skip) {
       continue
     }
-    const input = await defaultValue(fixture.input, fixtureConfig?.input, fixture)
+    const input = await defaultValue(fixture.input, fixtureConfig?.input)
 
     if (!input) {
       thisCmd.error(`fixture[${i}] missing input for the fixture file: ` + fixtureFilepath)
     }
-    const output = await defaultValue(fixtures[i].output, fixtureConfig?.output, fixture)
+    const output = await defaultValue(fixtures[i].output, fixtureConfig?.output)
     if (output == null && !userConfig.generateOutput && !fixture.outputSchema && !fixtureConfig.outputSchema) {
       thisCmd.error(`fixture[${i}] missing output or outputSchema for the fixture file: ` + fixtureFilepath)
     }
