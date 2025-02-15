@@ -25,7 +25,7 @@ export interface TestFixtureFileResult {
   duration: number;
 }
 
-const ReasonNames = ['reason', 'reasons', 'explanation', 'explanations', 'reasoning', 'reasonings']
+const ReasonNames = ['thinking', 'reasonings', 'reasoning', 'reasons', 'reason', 'explanations', 'explanation']
 
 function getReasonValue(obj: any) {
   // get obj value by any ReasonNames
