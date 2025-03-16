@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.1](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.0...v0.3.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* make ts happy ([c495df7](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/c495df72e1fd41b79571ea7c9dfdcdb9dc30ec11))
+
 ## [0.3.0](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.2.10...v0.3.0) (2025-03-16)
 
 
