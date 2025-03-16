@@ -3,6 +3,7 @@ import cj from 'color-json'
 import color from 'ansicolor'
 import { Args, Flags } from '@oclif/core'
 import { omit } from 'lodash-es'
+// @ts-ignore
 import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'

@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+// @ts-ignore
 import { getTemplateData, LogLevelMap, parseFrontMatter, parseYaml } from '@isdk/ai-tool-agent'
 import { AIScriptEx, runScript } from '@offline-ai/cli-plugin-core'
 import { expandPath, getMultiLevelExtname, hasDirectoryIn } from '@isdk/ai-tool'
