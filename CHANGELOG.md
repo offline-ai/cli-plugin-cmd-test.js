@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.0](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.2.10...v0.3.0) (2025-03-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* upstream cli-common
+* change error message log level from notice to warn
+
+### Features
+
+* add normalizeScores func ([a6d9e7c](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/a6d9e7c93c6642cdf8b60f4c76a5a5626a56a461))
+* add thinking supports ([97e9e6a](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/97e9e6aa83f6e9939da9d1644520d9bc30f4b7db))
+
+
+### Bug Fixes
+
+* can not write output to file ([1228f16](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/1228f1676fe8651aa0a6e7b9f8c6c4159a2b77ca))
+* do not print if no expectedSchema ([189dbf7](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/189dbf7af50ac708e2eb27adb054873d8e89110a))
+* input and ouput can not format string ([68a33da](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/68a33da4d1d73c31343e2a33060534f3873876df))
+* output as function can not work ([1a5417d](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/1a5417dc973e23d3a6e7adc3378a4e4b103ca067))
+* should format with script front-matter config ([12699e1](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/12699e1f2b59ecd8d768c0dc7eb4455f1ad43949))
+* should show actual output as warn when failed ([bf40aec](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/bf40aec94c7ee28b7adf6fdd074214be353d17ed))
+* use different color identify output ([cac5f66](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/cac5f66db3faead7e95b1c995287e336b2f6cf13))
+
+
+### Refactor
+
+* allow unknown keywords in json schema ([a5f3b97](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/a5f3b97ba8b7714f131cbe81937661d62da69e46))
+* change error message log level from notice to warn ([5a3686d](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/5a3686d62065f3e4a4401fb88b37446ebd048133))
+* upstream cli-common ([d064385](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/d0643858bb7671ef7eb329d5b83858cde202f82f))
+
 ## [0.2.10](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.2.9...v0.2.10) (2024-12-22)
 
 ## [0.2.9](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.2.8...v0.2.9) (2024-12-19)
