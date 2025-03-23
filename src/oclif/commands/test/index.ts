@@ -112,15 +112,24 @@ export default class RunTest extends AICommand {
     if (runCount > 1) {
       // check if the results are consistent with the previous run, and to record the counts of matching and non-matching results
       const firstTestResult = testResults[0]
-      let failedCount = 0
+      let notMatchedFailedCount = 0
+      let totalPassed = 0
+      let totalFailed = 0
+      let totalDuration = 0
+
       for (let i=0; i < testResults.length; i++) {
         const vTestResult = testResults[i]
         let failed = false
         for (let j=0; j < vTestResult.length; j++) {
           const vTest = vTestResult[j]
+
           const {script, test: testInfo} = vTest
+          totalPassed += testInfo.passedCount
+          totalFailed += testInfo.failedCount
+          totalDuration += testInfo.duration
+          // const {passedCount, failedCount, duration} = test as any
           const vFirstTest = firstTestResult[j]
-          if (vTest.script !== vFirstTest.script) {
+          if (script !== vFirstTest.script) {
             // this.error(`The script name is different in the two runs: ${vTest.script} and ${vFirstTest.script}`)
             this.log('notice', `${i}: The script name is different in the two runs: ${script} and ${vFirstTest.script}`)
             failed = true
@@ -134,9 +143,9 @@ export default class RunTest extends AICommand {
             failed = true
           }
         }
-        if (failed) {failedCount++}
+        if (failed) {notMatchedFailedCount++}
       }
-      this.log('warn', `Repeated(${runCount}): ${failedCount} failed.`)
+      this.log('warn', `Repeated(${runCount}) All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}, time ${totalDuration}ms, ${notMatchedFailedCount} missmatched.`)
     }
     return testResults
   }
@@ -191,7 +200,7 @@ export default class RunTest extends AICommand {
           failedCount++
           totalFailed++
           this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
-          this.log('warn', `🔴🔧 ~ failed input:`, cj(testLog.input));
+          if (testLog.input) this.log('warn', `🔴🔧 ~ failed input:`, typeof actual !== 'object' ? color.cyan(testLog.input) : cj(testLog.input));
           this.log('warn', '🔴🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
           if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
           if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))}
