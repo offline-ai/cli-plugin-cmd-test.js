@@ -200,7 +200,7 @@ export default class RunTest extends AICommand {
           failedCount++
           totalFailed++
           this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
-          if (testLog.input) this.log('warn', `🔴🔧 ~ failed input:`, typeof actual !== 'object' ? color.cyan(testLog.input) : cj(testLog.input));
+          if (testLog.input) this.log('warn', `🔴🔧 ~ failed input:`, typeof testLog.input !== 'object' ? color.cyan(testLog.input) : cj(testLog.input));
           this.log('warn', '🔴🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
           if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
           if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))}

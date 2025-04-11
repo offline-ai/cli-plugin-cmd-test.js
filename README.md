@@ -423,5 +423,5 @@ EXAMPLES
   $ ai test ./named.fixture.yaml -l info
 ```
 
-_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.3.14/src/commands/test/index.ts)_
+_See code: [src/commands/test/index.ts](https://github.com/offline-ai/cli-plugin-cmd-test.js/blob/v0.3.15/src/commands/test/index.ts)_
 <!-- commandsstop -->
