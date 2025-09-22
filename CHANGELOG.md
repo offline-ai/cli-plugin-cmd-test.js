@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.16](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.15...v0.3.16) (2025-09-22)
+
+
+### Bug Fixes
+
+* should display input correctly ([3c3f95a](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/3c3f95a82dc9aa3d4fcee15cdba90ef915762f30))
+* should newChat as default ([dc7fe5d](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/dc7fe5da5558c09c4be525c67af4f702d3d2d820))
+
 ## [0.3.15](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.14...v0.3.15) (2025-04-07)
 
 ## [0.3.14](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.13...v0.3.14) (2025-04-07)
