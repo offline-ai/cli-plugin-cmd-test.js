@@ -20,7 +20,7 @@
     "ajv-keywords": "^5.1.0",
     "ansicolor": "^2.0.3",
     "color-json": "^3.0.5",
-    "diff": "^8.0.2",
+    "diff": "^8.0.3",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
