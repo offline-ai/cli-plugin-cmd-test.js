@@ -99,7 +99,7 @@ export async function* testFixtureFileInScript(fixtures: any[], {scriptFilepath,
       thisCmd.error(`fixture[${i}] missing output or outputSchema for the fixture file: ` + fixtureFilepath)
     }
     fixtureConfig = await formatObject(fixtureConfig, {data: {...input, ...fixtureConfig}, input: fixture});
-    userConfig.data = await formatObject({...input}, {data: {...getTemplateData(scriptConfig), ...input, fixtureConfig}, input: fixture});
+    userConfig.data = await formatObject({...input}, {data: {...getTemplateData(scriptConfig), ...input, ...fixtureConfig}, input: fixture});
 
     userConfig.interactive = false
     // userConfig.chatsDir = undefined
