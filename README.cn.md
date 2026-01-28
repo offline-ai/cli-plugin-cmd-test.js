@@ -68,12 +68,12 @@ Default template data:
 ### 模板数据变量示例
 
 ```yaml
- ---
- # Front-matter configurations:
- description: 'This is a AI test fixtures file'
- # 声明可以在测试中使用的模板数据变量：
- content: 'hi world'
- # the varaiable can be a template string too.
+---
+# Front-matter configurations:
+description: 'This is a AI test fixtures file'
+# 声明可以在测试中使用的模板数据变量：
+content: 'hi world'
+# the varaiable can be a template string too.
 AnswerPattern: /The Answer is {{answer}}.$/
 ---
  # 测试样例项
