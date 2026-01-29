@@ -1,6 +1,3 @@
-import path from 'path'
-import cj from 'color-json'
-import color from 'ansicolor'
 import { Args, Flags } from '@oclif/core'
 import { omit } from 'lodash-es'
 // @ts-ignore
