@@ -3,7 +3,9 @@
 > 【[English](./README.md)|中文】
 ---
 
-[Offline AI Client](https://npmjs.org/package/@offline-ai/cli) 的内置命令插件，用于单元测试[可编程提示引擎](https://github.com/offline-ai/ppe)(智能体)脚本
+[Offline AI Client](https://npmjs.org/package/@offline-ai/cli) 的内置命令插件，用于单元测试[可编程提示引擎](https://github.com/offline-ai/ppe)(智能体)脚本。
+
+> **架构提示**: 本插件的核心测试逻辑已剥离为独立的函数库 `@isdk/ai-test-runner`，支持在任何 Node.js 环境中复用 AI 测试引擎。
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
@@ -23,7 +25,7 @@ npm install -g @offline-ai/cli
 
 * 测试样例文件应与AI提示或代理脚本文件位于同一目录。
 * 测试样例文件名格式为`[basename].fixture.yaml`。
-* AI提示或代理脚本文件名格式为`[basename][.additional-name].ai.yaml`, `[.additional-name]`部分可选。
+* AI脚本文件名格式为`[basename][.additional-name].ai.yaml`, `[.additional-name]`部分可选。
 
 ### 执行测试
 

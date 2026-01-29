@@ -7,8 +7,13 @@ import { omit } from 'lodash-es'
 import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
-import { getTestFixtures, loadTestFixtureFile, TestFixtureFileResult } from '../../../lib/test-fixture-file.js'
+import { loadTestFixtureFile } from '../../../lib/test-fixture-file.js'
 import '../../../lib/yaml-types/index.js'
+
+import { AITestRunner, AITestFixtureResult } from '@isdk/ai-test-runner'
+import { CLIScriptExecutor } from '../../../lib/cli-executor.js'
+import { ConsoleReporter } from '../../../lib/console-reporter.js'
+import { writeYamlFile } from '../../../lib/write-yaml-file.js'
 
 export default class RunTest extends AICommand {
   declare logLevel: LogLevel
@@ -102,7 +107,7 @@ export default class RunTest extends AICommand {
     const fixtureFileInfo = await loadTestFixtureFile(fixtureFilename, userConfig)
     userConfig.fixtureFileInfo = fixtureFileInfo
     const runCount = userConfig.runCount >= 1 ? userConfig.runCount : 1
-    const testResults: {script: string, test: TestFixtureFileResult}[][] = []
+    const testResults: {script: string, test: AITestFixtureResult}[][] = []
     for (let i = 0; i < runCount; i++) {
       const test = await this.runTest(userConfig)
       this.log('warn', `----------------------------------------`)
@@ -151,77 +156,54 @@ export default class RunTest extends AICommand {
   }
 
   async runTest(userConfig: any) {
+    const { scriptIds, fixtures, skips, fixtureInfo, fixtureFilepath } = userConfig.fixtureFileInfo
+    const fixtureConfig = fixtureInfo.data
 
-    const level = userConfig.logLevel
+    const executor = new CLIScriptExecutor(userConfig)
+    const runner = new AITestRunner(executor)
+    const reporter = new ConsoleReporter(this, userConfig.logLevel)
 
-    const testResult = getTestFixtures(userConfig.fixtureFileInfo)
-    // const testResults: {script: string, test: TestFixtureFileResult}[] = []
+    const testResults: { script: string, test: any }[] = []
     let totalPassed = 0
     let totalFailed = 0
     let totalDuration = 0
 
-    // for await (const {script, test: testInfo} of testFixtureFile(fixtureFilename, userConfig)) {
-    for (const vTest of testResult) {
-      const {script, test: testInfo} = vTest
-      // this.log('🚀 ~ Running ~ script:', script)
-      let passedCount = 0
-      let failedCount = 0
-      let duration = 0
-      const test: TestFixtureFileResult = {logs: [], passedCount, failedCount, duration}
-      for await (const testLog of testInfo) {
-        test.logs.push(testLog)
-        const i = testLog.i
-        const reason = testLog.reason ? `Reason: ${typeof testLog.reason === 'string' ? testLog.reason : cj(testLog.reason)}` : ''
-        const actual = testLog.actual
-        let expected = testLog.expected
-        const expectedSchema = testLog.expectedSchema
-        duration += testLog.duration
-        const sNot = testLog.not ? 'not': ''
-        if (expected !== undefined) {
-          const vType= typeof expected
-          if (vType === 'function') {
-            expected = expected.toString()
-          } else if (vType === 'object') {
-            expected = cj(expected)
+    for (const scriptFilepath of scriptIds) {
+      reporter.observe(runner, scriptFilepath)
+
+      const testResult = await runner.run(scriptFilepath, fixtures, {
+        fixtureConfig,
+        userConfig,
+        skips,
+        // Optional: scriptConfig metadata if we can load it here
+      })
+
+      // Side effect: Handle --generateOutput
+      if (userConfig.generateOutput) {
+        let modified = false
+        testResult.logs.forEach(log => {
+          if (log.actual !== undefined && fixtures[log.i].output === undefined) {
+            fixtures[log.i].output = log.actual
+            modified = true
           }
-        }
-        if (testLog.passed) {
-          passedCount++
-          totalPassed++
-          this.log('warn', `👍 ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ ok!`, reason, ` time ${testLog.duration}ms`);
-          if (LogLevelMap[level] <= LogLevelMap['notice']) {
-            this.log('notice', '👍🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
-            if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '👍🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
-            if (expected !== undefined) {
-              this.log('notice', '👍🔧 ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))
-            }
-          }
-        } else {
-          failedCount++
-          totalFailed++
-          this.log('warn', `❌ ~ Run(${path.basename(script)}) ~ Fixture[${i}] ~ failed!`, reason, ` time ${testLog.duration}ms`);
-          if (testLog.input) this.log('warn', `🔴🔧 ~ failed input:`, typeof testLog.input !== 'object' ? color.cyan(testLog.input) : cj(testLog.input));
-          this.log('warn', '🔴🔧 ~ actual output:', typeof actual === 'string' ? color.cyan(actual) : cj(actual));
-          if (expectedSchema !== undefined && Object.keys(expectedSchema).length) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected JSON Schema:', cj(expectedSchema))}
-          if (expected !== undefined) {this.log('notice', '🔴🔧 ~ ' +sNot+ ' expected output:', typeof expected === 'string' ? color.cyan(expected) : cj(expected))}
-          if (testLog.error) this.log('warn', '🔴 ', testLog.error.message || testLog.error)
+        })
+        if (modified) {
+          this.log(`Without output: write the result as output`)
+          await writeYamlFile(fixtureFilepath, fixtures)
         }
       }
-      // this.log(`${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}`)
-      test.passedCount = passedCount
-      test.failedCount = failedCount
-      test.duration = duration
-      totalDuration += duration
-      vTest.test = test as any
-      // testResults.push({script, test})
+
+      totalPassed += testResult.passedCount
+      totalFailed += testResult.failedCount
+      totalDuration += testResult.duration
+
+      testResults.push({ script: scriptFilepath, test: testResult })
+
+      this.log('warn', `${scriptFilepath}: ${testResult.passedCount} passed, ${testResult.failedCount} failed, total ${testResult.passedCount + testResult.failedCount}, time ${testResult.duration}ms`)
     }
-    for (const vTest of testResult) {
-      const {script, test} = vTest
-      const {passedCount, failedCount, duration} = test as any
-      this.log('warn', `${script}: ${passedCount} passed, ${failedCount} failed, total ${passedCount + failedCount}, time ${duration}ms`)
-    }
+
     this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}, time ${totalDuration}ms`)
 
-    return testResult as unknown as {script: string, test: TestFixtureFileResult}[]
+    return testResults
   }
 }

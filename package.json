@@ -12,6 +12,7 @@
   "dependencies": {
     "@isdk/ai-tool": "workspace:*",
     "@isdk/ai-tool-agent": "workspace:*",
+    "@isdk/ai-test-runner": "workspace:*",
     "@oclif/core": "^4",
     "@offline-ai/cli-common": "workspace:*",
     "@offline-ai/cli-plugin-core": "workspace:*",

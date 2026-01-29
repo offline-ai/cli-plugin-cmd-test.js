@@ -12,6 +12,12 @@ feats:
   ✔ supports input and output in front-matter config of fixture file @done(24-10-06 14:25)
   ✔ Add the `--runCount(-c)` flag to repeatedly run the test case and check if the results are consistent with the previous run, while recording the counts of matching and non-matching results. @done(24-10-07 20:33)
   ✔ Add `not` matcher to fixture test @done(24-11-21 09:31)
+  ✔ Extract core logic to `@isdk/ai-test-runner` package @done(26-01-29 11:35)
+  ✔ Use new `CLIScriptExecutor` and `ConsoleReporter` for CLI integration @done(26-01-29 11:35)
+  ✔ Refactor and clean up `src/lib/test-fixture-file.ts` @done(26-01-29 11:45)
+  ☐ Clean up other redundant files:
+    - `src/lib/to-match-object.ts`
+  ☐ howto include(overwrite) fixtures?
   ☐ 打分，打分我感觉是AI才能用。如果是代码，则只能使用数组，或者自定义tag（!score）表示的数组，数组的每个元素为一个得分点：分值，和 matcher，如果匹配则获得该分值. 分值如果省略默认为1分。
     法一： 增加 score 字段，对象数组, 每一个对象表示一个分值，对象如下
     * output: 就是定义满足期望输出时候的分值，如何是输出是对象，时候需要定义满足某个对象的某个属性时候的分值?
@@ -28,4 +34,68 @@ feats:
     score分值应该接受两种表达： 1. 0-100% 小于1的百分比值; 2. 动态分值，整数是一个相对分值，需要将该项目的所有分值统计，然后做归一化。
     归一化就是将一组数据按比例缩放到一个固定范围内，使得它们的总和为一个特定值（如100%）。
   ☐ 支持分步验证，比如数学题，需要多次验证，每次验证一个步骤
-  ☐ howto include(overwrite) fixtures?
+
+  关于评分策略 (Scoring Strategy) 的设计讨论
+
+  您提出的“评分策略”是一个非常棒的功能，尤其是在 AI 这种非确定性（Non-deterministic）输出的场景下。仅仅只有 Passed/Failed（0 或 1）往往过于武断。
+
+  目前的架构（返回结构化对象而非字符串）非常适合扩展评分功能。我们可以轻松地在现有的数据结构上“挂载”分值。
+
+  以下是具体的扩展方案：
+
+  1. 接口层面的扩展 (types.ts)
+
+  我们需要在结果对象中引入 score 概念。
+
+   export interface AITestLogItem {
+     passed: boolean
+     score?: number;      // <--- 新增: 本次测试获得的实际分数
+     maxScore?: number;   // <--- 新增: 本次测试的总分值（默认可能为 1 或 100）
+
+     // ... 其他字段
+     failures?: AIValidationFailure[]
+   }
+
+   export interface AIValidationFailure {
+     // ... 原有字段
+     penalty?: number;    // <--- 新增: 该错误导致的扣分
+     weight?: number;     // <--- 新增: 该项检查的权重
+   }
+
+  2. 配置层面的扩展 (YAML Fixture)
+
+  用户可以在 YAML 中定义分值规则：
+
+   - input: "写一首关于春天的诗"
+     maxScore: 10 # 总分 10 分
+     output:
+       # 必须包含 "春天"
+       - matches: /春天/
+         weight: 0.5    # 权重 50% (5分)
+       # 必须包含 "花"
+       - matches: /花/
+         weight: 0.3    # 权重 30% (3分)
+       # 格式要求
+       - matches: !json-schema
+           type: string
+           minLength: 20
+         weight: 0.2    # 权重 20% (2分)
+
+  3. 验证逻辑的扩展 (validateMatch)
+
+  目前的 validateMatch 是“一旦失败即返回错误”。为了支持评分，我们需要支持“软失败 (Soft Fail)”或“部分匹配”。
+
+   * 当前逻辑：
+       if (!matched) { failures.push(error); } // 视为完全失败
+
+   * 评分逻辑：
+      我们需要一种机制让 validateMatch 计算匹配度（Similarity）。
+       * 对于字符串 Diff：可以计算 Levenshtein 距离，根据相似度给分（例如 80% 相似给 0.8 * weight 分）。
+       * 对于对象/数组：每匹配一个属性/元素，累加相应的分数。
+
+  适应性评估:
+  目前的架构完全能够适应，只需要：
+   1. 在 AITestRunner.run 中，增加一个 score 累加器。
+   2. 修改 validateMatch 的签名，使其除了返回 failures 外，还能返回 score 或 matchRatio。
+       * 或者，将 failures 视为扣分项：TotalScore - Sum(failures.penalty)。
+
