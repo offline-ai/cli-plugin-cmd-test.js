@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.0](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.16...v0.4.0) (2026-01-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* decouple core testing logic into @isdk/ai-test-runner
+
+### Bug Fixes
+
+* can not replace the template var in input ([9cf0440](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/9cf0440db3eebae40daecc623e70f4f0d077dbfb))
+
+
+### Refactor
+
+* decouple core testing logic into @isdk/ai-test-runner ([d861cf0](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/d861cf0d4812f6724c1deac9c6a93e981de14c9f))
+* use new stringifyYaml in ai-tool ([78bbbd9](https://github.com/offline-ai/cli-plugin-cmd-test.js/commit/78bbbd9c9e110699ce7d5323ff5206da81ff5059))
+
 ## [0.3.16](https://github.com/offline-ai/cli-plugin-cmd-test.js/compare/v0.3.15...v0.3.16) (2025-09-22)
 
 
