@@ -9,9 +9,7 @@ export class ConsoleReporter {
   constructor(private cmd: any, private logLevel: LogLevel = 'warn') {}
 
   log(level: LogLevel, ...args: any[]) {
-    if (LogLevelMap[this.logLevel] <= LogLevelMap[level]) {
-      this.cmd.log(...args)
-    }
+    this.cmd.log(level, ...args)
   }
 
   observe(runner: AITestRunner, scriptPath: string) {
