@@ -58,7 +58,7 @@ export class ConsoleReporter {
 
     if (expected !== undefined) {
         let expectedStr = expected
-        if (typeof expected === 'function') expectedStr = expected.toString()
+        if (typeof expected === 'function') expectedStr = expected.name ? expected.name + '()'  : expected.toString()
         else if (typeof expected === 'object' && !(expected instanceof RegExp)) expectedStr = cj(expected)
 
         this.log('notice', `${prefix}🔧 ${sNot} expected output:`, typeof expectedStr === 'string' ? color.cyan(expectedStr) : expectedStr)
