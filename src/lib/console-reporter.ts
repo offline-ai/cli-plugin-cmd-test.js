@@ -16,12 +16,15 @@ export class ConsoleReporter {
     const scriptBase = path.basename(scriptPath)
 
     runner.on('test:start', ({ i }) => {
-      this.log('notice', `🚀 ~ Running(${scriptBase}) ~ fixture[${i}]`)
+      this.log('notice', `${color.cyan('▶')} Running ${color.blue(scriptBase)} Fixture[${i}]`)
     })
 
     runner.on('test:pass', (log: AITestLogItem) => {
-      const reason = log.reason ? `Reason: ${typeof log.reason === 'string' ? log.reason : cj(log.reason)}` : ''
-      this.log('warn', `👍 ~ Run(${scriptBase}) ~ Fixture[${log.i}] ~ ok!`, reason, ` time ${log.duration}ms`)
+      this.log('warn', `${color.green('✔ PASSED')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      if (log.reason) {
+        const reason = typeof log.reason === 'string' ? log.reason : cj(log.reason)
+        this.log('warn', `  Reason: ${reason}`)
+      }
 
       if (LogLevelMap[this.logLevel] <= LogLevelMap['notice']) {
         this.renderDetail(log)
@@ -29,49 +32,65 @@ export class ConsoleReporter {
     })
 
     runner.on('test:fail', (log: AITestLogItem) => {
-      const reason = log.reason ? `Reason: ${typeof log.reason === 'string' ? log.reason : cj(log.reason)}` : ''
-      this.log('warn', `❌ ~ Run(${scriptBase}) ~ Fixture[${log.i}] ~ failed!`, reason, ` time ${log.duration}ms`)
+      this.log('warn', `${color.red('✖ FAILED')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      if (log.reason) {
+        const reason = typeof log.reason === 'string' ? log.reason : cj(log.reason)
+        this.log('warn', `  Reason: ${reason}`)
+      }
       this.renderDetail(log, true)
     })
 
     runner.on('test:error', (log: AITestLogItem) => {
-      this.log('warn', `❌ ~ Run(${scriptBase}) ~ Fixture[${log.i}] ~ ERROR!`, ` time ${log.duration}ms`)
-      if (log.error) this.log('warn', '🔴 ', log.error.message || log.error)
+      this.log('warn', `${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || log.error)}`)
     })
   }
 
   private renderDetail(log: AITestLogItem, isFailed = false) {
     const { actual, expected, expectedSchema, failures, input, not: isNot } = log
-    const sNot = isNot ? 'not' : ''
-    const prefix = isFailed ? '🔴' : '👍'
+    const sNot = isNot ? color.red('NOT ') : ''
     const level = isFailed ? 'warn' : 'notice'
 
-    if (isFailed && input) {
-        this.log(level, `${prefix}🔧 ~ input:`, typeof input !== 'object' ? color.cyan(input) : cj(input))
+    const indent = (str: string, prefix = '    ') => {
+      return str.split('\n').map(line => prefix + line).join('\n')
     }
 
-    this.log(level, `${prefix}🔧 ~ actual output:`, typeof actual === 'string' ? color.cyan(actual) : cj(actual))
+    const formatValue = (val: any) => {
+      if (val === undefined) return color.darkGray('undefined')
+      if (typeof val === 'string') return color.cyan(val)
+      if (typeof val === 'function') return color.yellow(val.name ? val.name + '()' : val.toString())
+      if (val instanceof RegExp) return color.magenta(val.toString())
+      if (typeof val === 'object' && val !== null) return cj(val)
+      return color.cyan(String(val))
+    }
+
+    if (isFailed && input) {
+      this.log(level, `  Input:`)
+      this.log(level, indent(formatValue(input)))
+    }
+
+    this.log(level, `  Actual Output:`)
+    this.log(level, indent(formatValue(actual)))
 
     if (expectedSchema && Object.keys(expectedSchema).length) {
-        this.log('notice', `${prefix}🔧 ~ ${sNot} expected JSON Schema:`, cj(expectedSchema))
+      this.log('notice', `  ${sNot}Expected JSON Schema:`)
+      this.log('notice', indent(formatValue(expectedSchema)))
     }
 
     if (expected !== undefined) {
-        let expectedStr = expected
-        if (typeof expected === 'function') expectedStr = expected.name ? expected.name + '()'  : expected.toString()
-        else if (typeof expected === 'object' && !(expected instanceof RegExp)) expectedStr = cj(expected)
-
-        this.log('notice', `${prefix}🔧 ${sNot} expected output:`, typeof expectedStr === 'string' ? color.cyan(expectedStr) : expectedStr)
+      this.log('notice', `  ${sNot}Expected Output:`)
+      this.log('notice', indent(formatValue(expected)))
     }
 
     if (failures && failures.length > 0) {
-        failures.forEach(f => {
-            if (f.diff) {
-                this.renderDiff(f.diff)
-            } else if (f.message) {
-                this.log(level, `   ${color.red(f.message)}${f.key ? ' at ' + color.yellow(f.key) : ''}`)
-            }
-        })
+      this.log(level, `  ${color.red('Failures:')}`)
+      failures.forEach(f => {
+        if (f.diff) {
+          this.renderDiff(f.diff)
+        } else if (f.message) {
+          this.log(level, `    ${color.red('✖')} ${color.red(f.message)}${f.key ? ' at ' + color.yellow(f.key) : ''}`)
+        }
+      })
     }
   }
 
@@ -87,7 +106,7 @@ export class ConsoleReporter {
       }
       return result
     }).join('')
-    this.log('notice', `   Diff: ${diffStr}`)
+    this.log('notice', `    ${color.red('✖')} Diff: ${diffStr}`)
   }
 
   private stripConsoleColor(str: string) {
