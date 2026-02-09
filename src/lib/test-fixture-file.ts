@@ -37,7 +37,7 @@ export async function loadTestFixtureFile(fixtureFilepath: string, userConfig: a
 
   let scripts: string[] = userConfig.script
   if (scripts) {
-    scripts = [scripts as any]
+    if (!Array.isArray(scripts)) {scripts = [scripts as any]}
     const t = fixtureInfo.data.script || fixtureInfo.data.scripts
     if (t) {
       if (Array.isArray(t)) {scripts.push(...t)} else {scripts.push(t)}
