@@ -117,6 +117,7 @@ export default class RunTest extends AICommand {
       let notMatchedFailedCount = 0
       let totalPassed = 0
       let totalFailed = 0
+      let totalSkipped = 0
       let totalDuration = 0
 
       for (let i=0; i < testResults.length; i++) {
@@ -128,6 +129,7 @@ export default class RunTest extends AICommand {
           const {script, test: testInfo} = vTest
           totalPassed += testInfo.passedCount
           totalFailed += testInfo.failedCount
+          totalSkipped += testInfo.skippedCount
           totalDuration += testInfo.duration
           // const {passedCount, failedCount, duration} = test as any
           const vFirstTest = firstTestResult[j]
@@ -147,7 +149,7 @@ export default class RunTest extends AICommand {
         }
         if (failed) {notMatchedFailedCount++}
       }
-      this.log('warn', `Repeated(${runCount}) All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}, time ${totalDuration}ms, ${notMatchedFailedCount} missmatched.`)
+      this.log('warn', `Repeated(${runCount}) All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms, ${notMatchedFailedCount} missmatched.`)
     }
     return testResults
   }
@@ -163,6 +165,7 @@ export default class RunTest extends AICommand {
     const testResults: { script: string, test: any }[] = []
     let totalPassed = 0
     let totalFailed = 0
+    let totalSkipped = 0
     let totalDuration = 0
 
     for (const scriptFilepath of scriptIds) {
@@ -192,14 +195,15 @@ export default class RunTest extends AICommand {
 
       totalPassed += testResult.passedCount
       totalFailed += testResult.failedCount
+      totalSkipped += testResult.skippedCount
       totalDuration += testResult.duration
 
       testResults.push({ script: scriptFilepath, test: testResult })
 
-      this.log('warn', `${scriptFilepath}: ${testResult.passedCount} passed, ${testResult.failedCount} failed, total ${testResult.passedCount + testResult.failedCount}, time ${testResult.duration}ms`)
+      this.log('warn', `${scriptFilepath}: ${testResult.passedCount} passed, ${testResult.failedCount} failed, ${testResult.skippedCount} skipped, total ${testResult.passedCount + testResult.failedCount + testResult.skippedCount}, time ${testResult.duration}ms`)
     }
 
-    this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, total ${totalPassed + totalFailed}, time ${totalDuration}ms`)
+    this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms`)
 
     return testResults
   }

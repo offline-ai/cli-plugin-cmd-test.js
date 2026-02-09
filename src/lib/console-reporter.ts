@@ -44,6 +44,10 @@ export class ConsoleReporter {
       this.log('warn', `${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
       if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || log.error)}`)
     })
+
+    runner.on('test:skip', (log: AITestLogItem) => {
+      this.log('notice', `${color.darkGray('○')} SKIPPED ${color.blue(scriptBase)} Fixture[${log.i}]`)
+    })
   }
 
   private renderDetail(log: AITestLogItem, isFailed = false) {
