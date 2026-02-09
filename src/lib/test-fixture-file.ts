@@ -81,14 +81,8 @@ export async function loadTestFixtureFile(fixtureFilepath: string, userConfig: a
     fixtures = [fixtures]
   }
 
-  const onlyIndex = fixtures.findIndex(fixture => fixture.only)
   const skips = {} as {[key: number]: boolean}
-
-  if (onlyIndex >= 0) {
-    fixtures.forEach((fixture, i) => {
-      skips[i] = i !== onlyIndex
-    })
-  } else if (userConfig.includeIndex || userConfig.excludeIndex) {
+  if (userConfig.includeIndex || userConfig.excludeIndex) {
     fixtures.forEach((fixture, i) => {
       if (userConfig.includeIndex) {
         skips[i] = !userConfig.includeIndex.includes(i)

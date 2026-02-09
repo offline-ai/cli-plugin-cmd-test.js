@@ -12,21 +12,25 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
 <!-- toc -->
-* [AI Client Test Command](#ai-client-test-command)
-* [Quick Start](#quick-start)
-* [Install](#install)
-* [File Naming Conventions](#file-naming-conventions)
-* [Run test](#run-test)
-* [Front-matter configurations:](#front-matter-configurations)
-* [(Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename](#optional-forcefully-specify-the-ppe-script-filename-to-run-ignoring-the-conventionally-agreed-ppe-filename)
-* [the test fixture item:](#the-test-fixture-item)
-* [declare the template data varaibles which can be used in the test:](#declare-the-template-data-varaibles-which-can-be-used-in-the-test)
-* [the varaiable can be a template string too.](#the-varaiable-can-be-a-template-string-too)
-* [the test fixture item:](#the-test-fixture-item)
-* [Generate Output](#generate-output)
-* [valid Data:](#valid-data)
-* [invalid Data:](#invalid-data)
-* [Commands](#commands)
+- [AI Client Test Command](#ai-client-test-command)
+- [Quick Start](#quick-start)
+- [Install](#install)
+- [File Naming Conventions](#file-naming-conventions)
+- [Run test](#run-test)
+- [AI Tool Testing (New)](#ai-tool-testing-new)
+    - [`expect.tools` Specification](#expecttools-specification)
+- [Comprehensive Validation Strategies](#comprehensive-validation-strategies)
+  - [Template Data](#template-data)
+  - [Dynamic Regex Keys and Nested Paths (New)](#dynamic-regex-keys-and-nested-paths-new)
+  - [`Diff` String Validation](#diff-string-validation)
+  - [JSON Schema Validation](#json-schema-validation)
+- [Generate Output](#generate-output)
+    - [JSON Schema Keywords Extensions](#json-schema-keywords-extensions)
+    - [Defined String Formats for JSON Schema](#defined-string-formats-for-json-schema)
+      - [Keywords to compare values: `formatMaximum` / `formatMinimum` and `formatExclusiveMaximum` / `formatExclusiveMinimum`](#keywords-to-compare-values-formatmaximum--formatminimum-and-formatexclusivemaximum--formatexclusiveminimum)
+- [Commands](#commands)
+  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
+  - [`ai test [FILE]`](#ai-test-file)
 <!-- tocstop -->
 
 # Quick Start
@@ -79,7 +83,46 @@ script: '[basename].ai.yaml'
   not: true   # Inverse match flag, if true, the test succeeds when the expected output does not match.
   skip: true  # Optional flag to skip the test
   only: true  # Optional flag to run only this test; only one of 'skip' or 'only' can be set, and 'only' takes precedence
+  strict: object # Enable strict matching mode for objects in this case
 ```
+
+# AI Tool Testing (New)
+
+Supports integrated testing of AI function scripts as "tools". The engine automatically redirects to the driver script (`toolTester`) and allows verification of complex tool call sequences.
+
+```yaml
+---
+tools: [calculator.ai.yaml]
+toolTester: agent.ai.yaml # Defaults to 'toolTester'
+---
+- input: "What is 1+1?"
+  output: "2"
+  expect:
+    tools: # Syntax sugar: find tool calls in the message chain
+      - name: calculator
+        args: { a: 1, b: 1 }
+```
+
+### `expect.tools` Specification
+
+- **Auto-aggregation**: Scans all messages for tool calls.
+- **Matching Modes**:
+  - If array, defaults to **`$all`** (all must appear, any order).
+  - If **`$sequence`** is used, tool calls must follow the specified order.
+
+# Comprehensive Validation Strategies
+
+- **String & Regex**: Partial matching and complex regex.
+- **Deep Object/Array**: Recursive validation with regex key support.
+- **Advanced Operators**:
+  - **`$contains`**: At least one element matches.
+  - **`$all`**: All specified items must exist (unordered).
+  - **`$sequence`**: Specified items must appear in order (with gaps allowed).
+  - **`$not`**: Fails if the pattern matches.
+  - **`$schema`**: Explicit JSON Schema validation.
+- **Custom Functions**: Support arbitrary logic via JS/TS functions.
+  - `output` function: `(actualOutput, input) => boolean | string`
+  - `expect` function: `(fullResult, input) => boolean | string`
 
 Fixtures Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
 
@@ -133,9 +176,36 @@ Default template data:
 * `__script_dir__`: the current script file directory.
 * `__fixture_dir__`: the fixture file directory.
 
+## Dynamic Regex Keys and Nested Paths (New)
+
+**Dynamic Regex Keys**:
+
+```yaml
+variables:
+  id: "123"
+---
+- input: { query: "user" }
+  output:
+    "/^user_{{id}}_/": "ok" # Matches keys like user_123_...
+```
+
+**Nested Path Keys**:
+
+```yaml
+- input: "Get user profile"
+  output:
+    "user.profile.name": "Alice"
+    "user.profile.age": 30
+```
+
 ## `Diff` String Validation
 
-Using `diff` can help validate and supplement strings. For example, it allows the existence of extra blank lines. This ensures that when there are minor differences in the string results, they can still pass the validation.
+Using `diff` can help validate and supplement strings. `diff` items are treated as a **"Whitelist of Allowed Deviations"**.
+
+1. **Whitelist Logic**: Minor differences (like a trailing newline) are allowed if listed.
+2. **Subset Matching (Default)**: Actual changes must be a subset of the whitelist.
+3. **Strict Mode (`strict: diff`)**: Actual changes must match the whitelist exactly.
+4. **Permissive Mode (`diffPermissive: true`)**: Ignore all undeclared changes, only verify `required: true` items.
 
 ```yaml
 ---
@@ -146,37 +216,31 @@ description: 'This is a AI test fixtures file'
     ...
   output: "This is the expected output"
   diff:
-    - add: true # Allows additional blank lines to be added
-      value: '\n'
+    - value: "\n"
+      added: true # Allowed: extra newline
+    - value: "MUST HAVE"
+      added: true
+      required: true # Mandatory: this change must occur
 ```
 
 ## JSON Schema Validation
 
-* If the `output` convention is used in the PPE script, the test will automatically use this `output` as a `JSON-Schema` to validate the output.
-* In tests, you can use `outputSchema` to validate the input with a `JSON-Schema`.
-* In tests, you can use `checkSchema` to temporarily disable `JSON-Schema` validation, which defaults to `true`.
-* You can also disable `JSON-Schema` validation via the command line: `ai test --no-checkSchema`.
-* The priority of `checkSchema` is: `command-line argument > fixture item > fixture front-matter > default value`.
+* **Explicit Schema (Recommended)**: Use `$schema` operator.
+* **Heuristic Identification**: Objects with standard `type` (string, number, etc.) are recognized as schemas unless `disableHeuristicSchema: true` is set.
+* In PPE scripts, `output` convention is automatically used as a `JSON-Schema`.
+* In tests, use `outputSchema` (legacy) or `$schema` inside `output`.
+* `checkSchema`: Temporarily disable validation (defaults to `true`).
+* Priority: `command-line argument > fixture item > fixture front-matter > default value`.
 
 ```yaml
----
-description: 'This is an AI test fixtures file'
-checkSchema: false # Can disable `JSON-Schema` validation, default is true
----
-- input: # Input content
-    content: '{{content}}'
-    ...
-  outputSchema:
-    type: object
-    properties:
-      name:
-        type: string
-        pattern: "^First" # or use non-standard regexp: /^First/i
-        minLength: 2
-      age:
-        type: number
-        minimum: 18
-  checkSchema: false # Can also temporarily disable `JSON-Schema` validation in the fixture item
+- input: { get_user: 1 }
+  output:
+    profile:
+      $schema:
+        type: object
+        properties:
+          name: { type: string, pattern: "^[A-Z]" }
+```
 
 # Generate Output
 

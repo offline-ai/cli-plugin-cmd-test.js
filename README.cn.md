@@ -41,24 +41,63 @@ npm install -g @offline-ai/cli
 
 **测试样例数据格式** 测试样例文件采用YAML格式。每个测试项包括输入（`input`）、预期输出(`output`)及可选的跳过(`skip`)和只执行(`only`)标志：
 
- ```yaml
- ---
- # Front-matter configurations:
- description: 'This is a AI test fixtures file'
- # (可选) 强制指定要运行的 PPE script 文件名，忽略约定的PPE文件名
- script: '[basename].ai.yaml'
- ---
- # 测试样例项
- - input: # 输入内容
-     content: '...'
-     ...
-   output: # 预期输出结果
-     name: !re /^First/ # 可以是正则表达式字符串匹配
-     ...
-   not: true   # 反向匹配标志，如果为真，当预期输出结果不匹配的时候，才测试成功
-   skip: true  # 可选跳过标志
-   only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
- ```
+```yaml
+---
+# Front-matter configurations:
+description: 'This is a AI test fixtures file'
+# (可选) 强制指定要运行的 PPE script 文件名，忽略约定的PPE文件名
+script: '[basename].ai.yaml'
+---
+# 测试样例项
+- input: # 输入内容
+   content: '...'
+   ...
+ output: # 预期输出结果
+   name: !re /^First/ # 可以是正则表达式字符串匹配
+   ...
+ not: true   # 反向匹配标志，如果为真，当预期输出结果不匹配的时候，才测试成功
+ skip: true  # 可选跳过标志
+ only: true  # 可选只执行标志, skip 和 only 只能设置一个, only 优先
+ strict: object # 为此用例启用对象的严格匹配模式
+```
+
+# AI 工具测试 (New)
+
+支持将 AI 函数脚本作为“工具”进行集成测试。引擎会自动重定向到驱动脚本（`toolTester`），并允许验证复杂的工具调用序列。
+
+```yaml
+---
+tools: [calculator.ai.yaml]
+toolTester: agent.ai.yaml # 默认为 'toolTester'
+---
+- input: "1+1 等于几？"
+  output: "2"
+  expect:
+    tools: # 语法糖：在消息链路中查找工具调用
+      - name: calculator
+        args: { a: 1, b: 1 }
+```
+
+### `expect.tools` 规范说明
+
+- **自动聚合**: 引擎会遍历所有消息，提取所有 `tools` 列表。
+- **匹配模式**:
+  - 如果 `expect.tools` 是一个 **数组**，默认采用 **`$all`** 逻辑（所有项必须出现，顺序无关）。
+  - 如果 `expect.tools` 包含 **`$sequence`**，则要求工具按指定的顺序被调用。
+
+# 全面的验证策略
+
+- **字符串与正则**: 支持部分字符串匹配和复杂的正则表达式。
+- **深度对象/数组**: 递归验证嵌套的数据结构，支持对象键的正则匹配。
+- **高级操作符**:
+  - **`$contains`**: 针对数组，只要有一个元素匹配模式即通过。
+  - **`$all`**: 针对数组，必须包含所有指定的匹配项（顺序无关）。
+  - **`$sequence`**: 针对数组，必须按顺序出现指定的匹配项（中间允许干扰）。
+  - **`$not`**: 反向断言，如果内容匹配模式则测试失败。
+  - **`$schema`**: 显式使用 JSON Schema 验证值（推荐）。
+- **自定义函数**: 支持通过 JavaScript/TypeScript 函数实现任意复杂的匹配逻辑。
+  - 当 `output` 为函数时，它接收 `(actualOutput, input)`。
+  - 当 `expect` 为函数时，它接收 `(fullResult, input) => boolean | string`。
 
 * Fixture Demo: https://github.com/offline-ai/cli/tree/main/examples/split-text-paragraphs
 
@@ -102,10 +141,36 @@ output: /The Answer is {{answer}}.$/i
   answer: yes
 ```
 
+### 动态正则键与嵌套路径 (New)
+
+**动态正则键：**
+
+```yaml
+variables:
+  id: "123"
+---
+- input: { query: "user" }
+  output:
+    "/^user_{{id}}_/": "ok" # 动态匹配 user_123_... 格式的键
+```
+
+**嵌套路径键：**
+
+```yaml
+- input: "获取个人信息"
+  output:
+    "user.profile.name": "Alice"
+    "user.profile.age": 30
+```
+
 ### `Diff` 验证字符串
 
-使用`diff`可以对字符串进行补充验证。比如可以允许字符串中把助词"的"改为"地",允许存在额外的空行。
-使得当字符串结果存在这些少量的不同的时候，也能通过验证。
+使用 `diff` 可以对字符串进行补充验证。在 `ai-test-runner` 中，`diff` 列表被视为一个 **“允许的偏差白名单”**。
+
+1. **白名单逻辑**：如果没有这份清单，任何字符差异都会导致失败。通过列出项，你是在告诉引擎这些变更是可以接受的。
+2. **子集匹配 (默认模式)**：实际发生的变更必须是白名单的 **子集**。
+3. **严格模式 (`strict: diff`)**：实际发生的变更必须与白名单 **完全一致**。
+4. **宽容模式 (`diffPermissive: true`)**：忽略所有未声明的变更，仅验证标记为 `required` 的必须变更项。
 
 ```yaml
 ---
@@ -114,45 +179,32 @@ description: 'This is a AI test fixtures file'
 - input: # 输入内容
     content: '{{content}}'
     ...
-  output: “这是应该输出的内容”
+  output: "这是预期输出"
   diff:
-    # 允许额外添加的空行
-    - add: true
-      value: '\n'
-    # 允许将"的"改为"地"
-    - value: "的"
-      removed: true
-    - value: "地"
+    - value: "\n"
+      added: true   # 允许：额外的空行是可以接受的
+    - value: "必须包含"
       added: true
+      required: true # 强制：实际输出中必须存在此变更
 ```
 
 ### 用 JSON Schema 验证
 
+* **显式验证 (推荐)**：使用 `$schema` 操作符显式指示一个数据块应作为 JSON Schema 进行验证。
+* **启发式识别**：引擎也会自动将包含标准 `type` 属性的对象识别为 Schema。建议使用 `disableHeuristicSchema: true` 禁用此行为以避免歧义。
 * 如果在PPE脚本中使用了`output`约定，测试会自动使用该`output`作为`JSON-Schema`对输出进行校验。
-* 在测试中可以`outputSchema`使用`JSON-Schema`对输入进行校验
+* 在测试中可以`outputSchema` (旧版) 或在 `output` 中使用 `$schema` 使用`JSON-Schema`对输入进行校验。
 * 在测试中可以使用`checkSchema`来临时禁用`JSON-Schema`校验，默认为 `true`。
-* 也可在命令行中禁用`JSON-Schema`校验： `ai test --no-checkSchema`
-* `checkSchema` 的优先级为： `命令行参数 > fixture item > fixture front-matter > 默认值`
+* `checkSchema` 的优先级为： `命令行参数 > fixture item > fixture front-matter > default value`
 
 ```yaml
----
-description: 'This is a AI test fixtures file'
-checkSchema: false # 可以禁用`JSON-Schema`校验，默认为 true
----
-- input: # 输入内容
-    content: '{{content}}'
-    ...
-  outputSchema:
-    type: object
-    properties:
-      name:
-        type: string
-        pattern: "^First" # or use non-standard regexp: /^First/i
-        minLength: 2
-      age:
-        type: number
-        minimum: 18
-  checkSchema: false # 也可在fixture item中临时禁用`JSON-Schema`校验
+- input: { get_user: 1 }
+  output:
+    profile:
+      $schema:
+        type: object
+        properties:
+          name: { type: string, pattern: "^[A-Z]" }
 ```
 
 #### JSON Schema 的 Keywords 扩展
