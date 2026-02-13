@@ -62,6 +62,17 @@ ai test "[basename].fixture.yaml"
 
 This command will run all matching Prompt/Agent script files in the same directory, one by one.
 
+## Enhanced Test Reporting
+
+When a test fails, the reporter provides detailed and intuitive feedback to help you debug quickly:
+
+- **Automatic Visual Diff**: If the actual output doesn't match the expected one, a visual diff is automatically generated.
+  - **Multi-line**: Uses a `git diff` style for large text or objects, with `+` and `-` prefixes.
+  - **Single-line**: Uses color-coded differences for short strings.
+- **Stable Object Comparison**: JSON objects are automatically sorted by keys before comparison. This prevents test failures caused solely by different property orders.
+- **Robust Formatting**: Gracefully handles `null`, `undefined`, and circular references in your test data or AI output.
+- **Smart Detail Hiding**: When a clear Diff is available, redundant "Actual" and "Expected" blocks are automatically hidden to keep your terminal clean.
+
 Test Fixture Data Format The test fixture file uses YAML format.
 
 Each test item includes input, expected output, and an optional skip flag:
