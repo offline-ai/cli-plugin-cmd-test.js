@@ -10,9 +10,9 @@
   "repository": "https://github.com/offline-ai/cli-plugin-cmd-test.js",
   "bugs": "https://github.com/@offline-ai/cli-plugin-cmd-test.js/issues",
   "dependencies": {
+    "@isdk/ai-test-runner": "workspace:*",
     "@isdk/ai-tool": "workspace:*",
     "@isdk/ai-tool-agent": "workspace:*",
-    "@isdk/ai-test-runner": "workspace:*",
     "@oclif/core": "^4",
     "@offline-ai/cli-common": "workspace:*",
     "@offline-ai/cli-plugin-core": "workspace:*",

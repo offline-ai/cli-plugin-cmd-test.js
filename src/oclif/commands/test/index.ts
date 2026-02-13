@@ -151,6 +151,7 @@ export default class RunTest extends AICommand {
       }
       this.log('warn', `Repeated(${runCount}) All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms, ${notMatchedFailedCount} missmatched.`)
     }
+    // console.log('Active handles:', (process as any)._getActiveHandles());
     return testResults
   }
 
