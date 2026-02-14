@@ -44,7 +44,7 @@ describe('ConsoleReporter', () => {
     expect(diffLog).toBeDefined()
     const strippedDiff = stripColor(diffLog[1])
     expect(strippedDiff).toContain('Hello ')
-    expect(strippedDiff).toContain('Gemini') // removed (in diff library, old is removed)
+    expect(strippedDiff).toContain('Gemini') // removed
     expect(strippedDiff).toContain('World')  // added
   })
 
@@ -244,7 +244,7 @@ line3`
     expect(allLogs).toContain('Fixture[undefined]')
   })
 
-  it('should handle empty string diffs', () => {
+  it('should handle empty string mismatch with quotes and labels', () => {
     runner.emit('test:fail', {
       i: 16,
       duration: 1,
@@ -254,7 +254,23 @@ line3`
     })
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
     expect(allLogs).toContain('Diff:')
-    expect(allLogs).toContain('-something')
+    expect(allLogs).toContain('Actual Output:')
+    expect(allLogs).toContain('""')
+    expect(allLogs).toContain('Expected Output:')
+    expect(allLogs).toContain('"something"')
+  })
+
+  it('should handle space strings with quotes', () => {
+    runner.emit('test:fail', {
+      i: 27,
+      duration: 1,
+      passed: false,
+      actual: ' ',
+      expected: '  '
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('" "')
+    expect(allLogs).toContain('"  "')
   })
 
   it('should render special types (RegExp, Function, Date)', () => {
@@ -316,5 +332,163 @@ line3`
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
     expect(allLogs).toContain('Input:')
     expect(allLogs).toContain('"query": "test"')
+  })
+
+  it('should show Actual and Expected Output when failing with RegExp expectation', () => {
+    runner.emit('test:fail', {
+      i: 21,
+      duration: 10,
+      passed: false,
+      actual: 'Actual text that does not match',
+      expected: /ExpectedRegex/
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).not.toContain('Diff:')
+    expect(allLogs).toContain('Actual Output:')
+    expect(allLogs).toContain('"Actual text that does not match"')
+    expect(allLogs).toContain('Expected Output:')
+    expect(allLogs).toContain('/ExpectedRegex/')
+  })
+
+  it('should show Actual/Expected instead of diff when failures item has RegExp expected', () => {
+    runner.emit('test:fail', {
+      i: 22,
+      duration: 10,
+      passed: false,
+      failures: [
+        {
+          message: 'RegExp mismatch',
+          actual: 'some text',
+          expected: /other/
+        }
+      ]
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).not.toContain('Diff:')
+    expect(allLogs).toContain('Actual: "some text"')
+    expect(allLogs).toContain('Expected: /other/')
+  })
+
+  it('should show Actual/Expected and Diff for short strings on failure', () => {
+    runner.emit('test:fail', {
+      i: 23,
+      duration: 10,
+      passed: false,
+      actual: 'Okay, I apologize',
+      expected: 'Something else'
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('Diff:')
+    // It SHOULD contain Actual/Expected labels
+    expect(allLogs).toContain('Actual Output:')
+    expect(allLogs).toContain('"Okay, I apologize"')
+    expect(allLogs).toContain('Expected Output:')
+    expect(allLogs).toContain('"Something else"')
+  })
+
+  it('should handle String objects as short strings', () => {
+    runner.emit('test:fail', {
+      i: 24,
+      duration: 10,
+      passed: false,
+      actual: new String('Wrapped String'),
+      expected: 'Other'
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('Diff:')
+    expect(allLogs).toContain('Actual Output:')
+    expect(allLogs).toContain('"Wrapped String"')
+  })
+
+  it('should show Diff for long strings', () => {
+    const longActual = 'A'.repeat(150)
+    const longExpected = 'B'.repeat(150)
+    runner.emit('test:fail', {
+      i: 25,
+      duration: 10,
+      passed: false,
+      actual: longActual,
+      expected: longExpected
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('Diff:')
+  })
+
+  it('should truncate very long strings in middle', () => {
+    const veryLongString = 'START' + 'X'.repeat(600) + 'END'
+    runner.emit('test:pass', {
+      i: 26,
+      duration: 1,
+      passed: true,
+      actual: veryLongString
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('START')
+    expect(allLogs).toContain('...')
+    expect(allLogs).toContain('END')
+    expect(allLogs.length).toBeLessThan(veryLongString.length)
+  })
+
+  it('should have correct indentation for diffs at different levels', () => {
+    // 1. Top-level mismatch (should have 2 spaces before '✖ Diff:')
+    runner.emit('test:fail', {
+      i: 28,
+      duration: 1,
+      passed: false,
+      actual: 'long actual string to trigger diff..........................................................................................',
+      expected: 'long expected string to trigger diff.........................................................................................'
+    })
+
+    // 2. Failure item mismatch (should have 4 spaces before '✖ Diff:')
+    runner.emit('test:fail', {
+      i: 29,
+      duration: 1,
+      passed: false,
+      failures: [
+        {
+          message: 'item error',
+          actual: 'long actual string to trigger diff..........................................................................................',
+          expected: 'long expected string to trigger diff.........................................................................................'
+        }
+      ]
+    })
+
+    const calls = mockCmd.log.mock.calls.map((c: any) => c[1]) // Keep original to check exact indentation
+    const logs = calls.map(c => stripColor(c))
+
+    const topLevelDiffLine = logs.find(l => l.includes('✖ Diff:') && l.startsWith('  ✖ Diff:'))
+    expect(topLevelDiffLine).toBeDefined()
+
+    const itemLevelDiffLine = logs.find(l => l.includes('✖ Diff:') && l.startsWith('    ✖ Diff:'))
+    expect(itemLevelDiffLine).toBeDefined()
+  })
+
+  it('should handle RegExp vs Object comparison without diff', () => {
+    runner.emit('test:fail', {
+      i: 30,
+      duration: 1,
+      passed: false,
+      actual: { data: 'test' },
+      expected: /test/
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).not.toContain('Diff:')
+    expect(allLogs).toContain('Actual Output:')
+    expect(allLogs).toContain('"data": "test"')
+    expect(allLogs).toContain('Expected Output:')
+    expect(allLogs).toContain('/test/')
+  })
+
+  it('should stringify nested RegExps in objects for diff', () => {
+    runner.emit('test:fail', {
+      i: 31,
+      duration: 1,
+      passed: false,
+      actual: { foo: 'bar' },
+      expected: { foo: /bar/ }
+    })
+    const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+    expect(allLogs).toContain('Diff:')
+    expect(allLogs).toContain('/bar/')
   })
 })

@@ -9,9 +9,13 @@ import { AITestRunner, AITestLogItem } from '@isdk/ai-test-runner'
 function stableStringify(obj: any): string {
   if (obj === undefined) return 'undefined'
   if (obj === null) return 'null'
+  if (obj instanceof RegExp) return obj.toString()
+  if (typeof obj === 'string') return obj
+  if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) return obj.toString()
   try {
     return JSON.stringify(obj, (key, value) => {
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
+      if (value instanceof RegExp) return value.toString()
+      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof RegExp)) {
         return Object.keys(value)
           .sort()
           .reduce((sorted: any, k) => {
@@ -24,6 +28,12 @@ function stableStringify(obj: any): string {
   } catch (e: any) {
     return `[Stringify Error: ${e.message}]`
   }
+}
+
+function truncateMiddle(str: string, maxLen: number = 500): string {
+  if (str.length <= maxLen) return str
+  const half = Math.floor((maxLen - 3) / 2)
+  return str.substring(0, half) + '...' + str.substring(str.length - half)
 }
 
 export class ConsoleReporter {
@@ -90,7 +100,9 @@ export class ConsoleReporter {
     const formatValue = (val: any) => {
       if (val === null) return color.darkGray('null')
       if (val === undefined) return color.darkGray('undefined')
-      if (typeof val === 'string') return color.cyan(val)
+      if (typeof val === 'string' || val instanceof String) {
+        return color.cyan(JSON.stringify(truncateMiddle(String(val))))
+      }
       if (typeof val === 'function') return color.yellow(val.name ? val.name + '()' : val.toString())
       if (val instanceof RegExp) return color.magenta(val.toString())
       if (typeof val === 'object') return cj(val)
@@ -102,10 +114,13 @@ export class ConsoleReporter {
       this.log(level, indent(formatValue(input)))
     }
 
-    const hasFailDiff = !isNot && ((failures && failures.length > 0 && failures.some(f => f && (f.diff || (f.actual !== undefined && f.expected !== undefined)))) ||
-                        (isFailed && expected !== undefined && (!failures || failures.length === 0)))
+    const isShort = (v: any) => (typeof v === 'string' || v instanceof String) && v.length < 100
+    const bothShort = isShort(actual) && isShort(expected)
 
-    if (!isFailed || !hasFailDiff) {
+    const hasFailDiff = !isNot && ((failures && failures.length > 0 && failures.some(f => f && (f.diff || (f.actual !== undefined && f.expected !== undefined && !(f.expected instanceof RegExp))))) ||
+                        (isFailed && expected !== undefined && !(expected instanceof RegExp) && (!failures || failures.length === 0)))
+
+    if (!isFailed || !hasFailDiff || bothShort) {
       this.log(level, `  Actual Output:`)
       this.log(level, indent(formatValue(actual)))
     }
@@ -115,7 +130,7 @@ export class ConsoleReporter {
       this.log('notice', indent(formatValue(expectedSchema)))
     }
 
-    if (expected !== undefined && (!isFailed || !hasFailDiff)) {
+    if (expected !== undefined && (!isFailed || !hasFailDiff || bothShort)) {
       this.log('notice', `  ${sNot}Expected Output:`)
       this.log('notice', indent(formatValue(expected)))
     }
@@ -126,34 +141,40 @@ export class ConsoleReporter {
         failures.forEach(f => {
           if (!f) return
           if (f.diff) {
-            this.renderDiff(f.diff)
+            this.renderDiff(f.diff, '    ')
           } else if (f.message) {
             this.log(level, `    ${color.red('✖')} ${color.red(f.message)}${f.key ? ' at ' + color.yellow(f.key) : ''}`)
             if (f.actual !== undefined && f.expected !== undefined) {
-              const actualStr = typeof f.actual === 'string' ? f.actual : stableStringify(f.actual)
-              const expectedStr = typeof f.expected === 'string' ? f.expected : stableStringify(f.expected)
-              const d = (actualStr.includes('\n') || expectedStr.includes('\n'))
-                ? diff.diffLines(expectedStr, actualStr)
-                : diff.diffChars(expectedStr, actualStr)
-              this.renderDiff(d)
+              if (!(f.expected instanceof RegExp) && !(f.actual instanceof RegExp)) {
+                const actualStr = stableStringify(f.actual)
+                const expectedStr = stableStringify(f.expected)
+                const d = (actualStr.includes('\n') || expectedStr.includes('\n'))
+                  ? diff.diffLines(expectedStr, actualStr)
+                  : diff.diffChars(expectedStr, actualStr)
+                this.renderDiff(d, '    ')
+              } else {
+                this.log(level, `      Actual: ${formatValue(f.actual)}`)
+                this.log(level, `      Expected: ${formatValue(f.expected)}`)
+              }
             }
           }
         })
-      } else if (expected !== undefined && !isNot) {
+      } else if (expected !== undefined && !isNot && !(expected instanceof RegExp) && !(actual instanceof RegExp)) {
         // No explicit failures, but failed (could be top-level mismatch)
-        const actualStr = typeof actual === 'string' ? actual : stableStringify(actual)
-        const expectedStr = typeof expected === 'string' ? expected : stableStringify(expected)
+        const actualStr = stableStringify(actual)
+        const expectedStr = stableStringify(expected)
         const d = (actualStr.includes('\n') || expectedStr.includes('\n'))
           ? diff.diffLines(expectedStr, actualStr)
           : diff.diffChars(expectedStr, actualStr)
-        this.renderDiff(d)
+        this.renderDiff(d, '  ')
       }
     }
   }
 
-  private renderDiff(diffItems: any[]) {
+  private renderDiff(diffItems: any[], prefix = '  ') {
     if (!Array.isArray(diffItems)) return
     const isMultiLine = diffItems.some(d => d && d.value && typeof d.value === 'string' && d.value.includes('\n'))
+    const indent = prefix + '  '
 
     if (!isMultiLine) {
       const diffStr = diffItems.map(d => {
@@ -167,24 +188,24 @@ export class ConsoleReporter {
         }
         return result
       }).join('')
-      this.log('notice', `    ${color.red('✖')} Diff: ${diffStr}`)
+      this.log('notice', `${prefix}${color.red('✖')} Diff: ${diffStr}`)
     } else {
-      this.log('notice', `    ${color.red('✖')} Diff:`)
+      this.log('notice', `${prefix}${color.red('✖')} Diff:`)
       diffItems.forEach(d => {
         if (!d || !d.value) return
         const lines = String(d.value).split('\n')
         lines.forEach((line: string, i: number) => {
           if (i === lines.length - 1 && line === '') return
-          let prefix = d.added ? '+' : d.removed ? '-' : ' '
+          let prefixChar = d.added ? '+' : d.removed ? '-' : ' '
           let lineContent = line
-          let result = d.added ? color.green(prefix + lineContent) :
-                       d.removed ? color.red(prefix + lineContent) :
-                       color.darkGray(prefix + lineContent)
+          let result = d.added ? color.green(prefixChar + lineContent) :
+                       d.removed ? color.red(prefixChar + lineContent) :
+                       color.darkGray(prefixChar + lineContent)
 
           if (d.verified) {
             result = color.white('✓(' + this.stripConsoleColor(result) + ')')
           }
-          this.log('notice', `      ${result}`)
+          this.log('notice', `${indent}${result}`)
         })
       })
     }
@@ -194,4 +215,3 @@ export class ConsoleReporter {
     return str.replace(/\x1B\[\d+m/g, '')
   }
 }
-
