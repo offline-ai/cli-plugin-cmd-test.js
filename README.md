@@ -17,6 +17,7 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 - [Install](#install)
 - [File Naming Conventions](#file-naming-conventions)
 - [Run test](#run-test)
+  - [Enhanced Test Reporting](#enhanced-test-reporting)
 - [AI Tool Testing (New)](#ai-tool-testing-new)
     - [`expect.tools` Specification](#expecttools-specification)
 - [Comprehensive Validation Strategies](#comprehensive-validation-strategies)
@@ -67,8 +68,14 @@ This command will run all matching Prompt/Agent script files in the same directo
 When a test fails, the reporter provides detailed and intuitive feedback to help you debug quickly:
 
 - **Automatic Visual Diff**: If the actual output doesn't match the expected one, a visual diff is automatically generated.
-  - **Multi-line**: Uses a `git diff` style for large text or objects, with `+` and `-` prefixes.
+  - **Multi-line**: Uses a `git diff` style for large text, with `+` and `-` prefixes.
   - **Single-line**: Uses color-coded differences for short strings.
+- **Path-based Object Diff**: For JSON objects and arrays, differences are presented as a clean list of paths (e.g., `[user.id]: -1 +2`) instead of a full JSON tree, significantly reducing noise.
+- **Smart Failure Summarization**:
+  - **Density-based**: If more than 80% of items fail, the reporter reverses the logic to show only the few "Successful Matches" to help you find common patterns.
+  - **Truncation**: If there are more than 10 failures, it displays a summary (first 3 and last 1) to keep the output concise.
+- **Semantic Text Comparison**: Automatically switches between word-level and character-level diffs based on content length for better readability.
+- **Regex Awareness**: Gracefully displays logical mismatches when using regular expressions instead of confusing character-level diffs.
 - **Stable Object Comparison**: JSON objects are automatically sorted by keys before comparison. This prevents test failures caused solely by different property orders.
 - **Robust Formatting**: Gracefully handles `null`, `undefined`, and circular references in your test data or AI output.
 - **Smart Detail Hiding**: When a clear Diff is available, redundant "Actual" and "Expected" blocks are automatically hidden to keep your terminal clean.

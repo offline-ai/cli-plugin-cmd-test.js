@@ -297,8 +297,8 @@ line3`
       ]
     })
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
-    expect(allLogs).toContain('First error at path.a')
-    expect(allLogs).toContain('Second error at path.b')
+    expect(allLogs).toContain('[path.a] First error')
+    expect(allLogs).toContain('[path.b] Second error')
   })
 
   it('should render verified flag in multi-line diffs', () => {
@@ -365,7 +365,7 @@ line3`
     })
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
     expect(allLogs).not.toContain('Diff:')
-    expect(allLogs).toContain('Actual: "some text"')
+    expect(allLogs).toContain('Actual:   "some text"')
     expect(allLogs).toContain('Expected: /other/')
   })
 
@@ -429,7 +429,7 @@ line3`
     expect(allLogs.length).toBeLessThan(veryLongString.length)
   })
 
-  it('should have correct indentation for diffs at different levels', () => {
+    it('should have correct indentation for diffs at different levels', () => {
     // 1. Top-level mismatch (should have 2 spaces before '✖ Diff:')
     runner.emit('test:fail', {
       i: 28,
@@ -439,7 +439,7 @@ line3`
       expected: 'long expected string to trigger diff.........................................................................................'
     })
 
-    // 2. Failure item mismatch (should have 4 spaces before '✖ Diff:')
+    // 2. Failure item mismatch (should have 6 spaces before '✖ Diff:')
     runner.emit('test:fail', {
       i: 29,
       duration: 1,
@@ -459,7 +459,7 @@ line3`
     const topLevelDiffLine = logs.find(l => l.includes('✖ Diff:') && l.startsWith('  ✖ Diff:'))
     expect(topLevelDiffLine).toBeDefined()
 
-    const itemLevelDiffLine = logs.find(l => l.includes('✖ Diff:') && l.startsWith('    ✖ Diff:'))
+    const itemLevelDiffLine = logs.find(l => l.includes('✖ Diff:') && l.startsWith('      ✖ Diff:'))
     expect(itemLevelDiffLine).toBeDefined()
   })
 
@@ -490,5 +490,143 @@ line3`
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
     expect(allLogs).toContain('Diff:')
     expect(allLogs).toContain('/bar/')
+  })
+
+  describe('Intelligent Diffing', () => {
+    it('should show successful items when most items fail (density-based)', () => {
+      runner.emit('test:fail', {
+        i: 100,
+        duration: 10,
+        passed: false,
+        actual: { a: 0, b: 0, c: 0, d: 0, e: 0, f: 6 },
+        expected: { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6 },
+        failures: [
+          { key: 'a', actual: 0, expected: 1, message: 'mismatch' },
+          { key: 'b', actual: 0, expected: 2, message: 'mismatch' },
+          { key: 'c', actual: 0, expected: 3, message: 'mismatch' },
+          { key: 'd', actual: 0, expected: 4, message: 'mismatch' },
+          { key: 'e', actual: 0, expected: 5, message: 'mismatch' }
+        ]
+      })
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      expect(allLogs).toContain('5 items failed. Only the following matched successfully:')
+      expect(allLogs).toContain('✔ f')
+      // Should not list all failures in detail mode when density is high
+      expect(allLogs).not.toContain('[a]')
+    })
+
+    it('should summarize failures when there are more than 10', () => {
+      const failures = Array.from({ length: 15 }, (_, i) => ({
+        key: `key${i}`,
+        message: 'mismatch',
+        actual: i,
+        expected: i + 1
+      }))
+
+      runner.emit('test:fail', {
+        i: 101,
+        duration: 10,
+        passed: false,
+        actual: {},
+        expected: { key0: 1 },
+        failures
+      })
+
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      expect(allLogs).toContain('[key0]')
+      expect(allLogs).toContain('[key1]')
+      expect(allLogs).toContain('[key2]')
+      expect(allLogs).toContain('... (11 more items skipped) ...')
+      expect(allLogs).toContain('[key14]')
+      expect(allLogs).toContain('Total: 15 failures found.')
+    })
+
+    it('should render JSON diff using path and val properties', () => {
+      runner.emit('test:fail', {
+        i: 102,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            key: 'metadata',
+            diff: [
+              { path: 'user.id', val: 123, added: true },
+              { path: 'tags[0]', val: 'ai', removed: true },
+              { path: 'unchanged', val: 'ok', added: false, removed: false }
+            ] as any
+          }
+        ]
+      })
+
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      expect(allLogs).toContain('+ user.id: 123')
+      expect(allLogs).toContain('- tags[0]: "ai"')
+      expect(allLogs).toContain('  unchanged: "ok"')
+    })
+
+    it('should render verified flag in JSON path diffs', () => {
+      runner.emit('test:fail', {
+        i: 105,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            key: 'metadata',
+            diff: [
+              { path: 'user.id', val: 123, added: true, verified: true }
+            ] as any
+          }
+        ]
+      })
+
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      // The verified item should be wrapped in tick marks and parenthesis
+      expect(allLogs).toContain('✓(+ user.id: 123)')
+    })
+
+    it('should use diffWords for long single-line strings', () => {
+      const actual = 'The quick brown fox jumps over the lazy dog'
+      const expected = 'The fast brown fox jumps over the lazy dog'
+
+      runner.emit('test:fail', {
+        i: 103,
+        duration: 10,
+        passed: false,
+        failures: [{
+          key: 'sentence',
+          actual,
+          expected,
+          message: 'mismatch'
+        }]
+      })
+
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      // diffWords should keep 'brown' as a whole token
+      expect(allLogs).toContain(' brown fox')
+      expect(allLogs).toContain('-fast')
+      expect(allLogs).toContain('+quick')
+    })
+
+    it('should handle Regex mismatch in failures gracefully', () => {
+      runner.emit('test:fail', {
+        i: 104,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            key: 'version',
+            actual: '1.2.3',
+            expected: /^v\d+/,
+            message: 'Regex mismatch'
+          }
+        ]
+      })
+
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
+      expect(allLogs).toContain('Pattern mismatch:')
+      expect(allLogs).toContain('Expected: /^v\\d+/')
+      expect(allLogs).toContain('Actual:   "1.2.3"')
+      expect(allLogs).not.toContain('Diff:')
+    })
   })
 })
