@@ -12,26 +12,23 @@ The [Offline AI Client](https://npmjs.org/package/@offline-ai/cli) builtin comma
 [![Downloads/week](https://img.shields.io/npm/dw/%40offline-ai%2Fcli-plugin-cmd-test.svg)](https://npmjs.org/package/@offline-ai/cli-plugin-cmd-test)
 
 <!-- toc -->
-- [AI Client Test Command](#ai-client-test-command)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [File Naming Conventions](#file-naming-conventions)
-- [Run test](#run-test)
-  - [Enhanced Test Reporting](#enhanced-test-reporting)
-- [AI Tool Testing (New)](#ai-tool-testing-new)
-    - [`expect.tools` Specification](#expecttools-specification)
-- [Comprehensive Validation Strategies](#comprehensive-validation-strategies)
-  - [Template Data](#template-data)
-  - [Dynamic Regex Keys and Nested Paths (New)](#dynamic-regex-keys-and-nested-paths-new)
-  - [`Diff` String Validation](#diff-string-validation)
-  - [JSON Schema Validation](#json-schema-validation)
-- [Generate Output](#generate-output)
-    - [JSON Schema Keywords Extensions](#json-schema-keywords-extensions)
-    - [Defined String Formats for JSON Schema](#defined-string-formats-for-json-schema)
-      - [Keywords to compare values: `formatMaximum` / `formatMinimum` and `formatExclusiveMaximum` / `formatExclusiveMinimum`](#keywords-to-compare-values-formatmaximum--formatminimum-and-formatexclusivemaximum--formatexclusiveminimum)
-- [Commands](#commands)
-  - [`ai run [FILE] [DATA]`](#ai-run-file-data)
-  - [`ai test [FILE]`](#ai-test-file)
+* [AI Client Test Command](#ai-client-test-command)
+* [Quick Start](#quick-start)
+* [Install](#install)
+* [File Naming Conventions](#file-naming-conventions)
+* [Run test](#run-test)
+* [Front-matter configurations:](#front-matter-configurations)
+* [(Optional) Forcefully specify the PPE script filename to run, ignoring the conventionally agreed PPE filename](#optional-forcefully-specify-the-ppe-script-filename-to-run-ignoring-the-conventionally-agreed-ppe-filename)
+* [the test fixture item:](#the-test-fixture-item)
+* [AI Tool Testing (New)](#ai-tool-testing-new)
+* [Comprehensive Validation Strategies](#comprehensive-validation-strategies)
+* [declare the template data varaibles which can be used in the test:](#declare-the-template-data-varaibles-which-can-be-used-in-the-test)
+* [the varaiable can be a template string too.](#the-varaiable-can-be-a-template-string-too)
+* [the test fixture item:](#the-test-fixture-item)
+* [Generate Output](#generate-output)
+* [valid Data:](#valid-data)
+* [invalid Data:](#invalid-data)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Quick Start
@@ -138,6 +135,20 @@ toolTester: agent.ai.yaml # Defaults to 'toolTester'
   - **`$sequence`**: Specified items must appear in order (with gaps allowed).
   - **`$not`**: Fails if the pattern matches.
   - **`$schema`**: Explicit JSON Schema validation.
+- **Custom Validation Operators (New)**: Support dynamic loading of validation logic via `js://` protocol or npm package names.
+  - Defined in Front-matter `operators`.
+  - Usage: `$opName: expectedValue`.
+  - Example:
+    ```yaml
+    ---
+    operators:
+      $isSafe: "./security.js#isSafe"
+    ---
+    - input: "Generate SQL"
+      expect:
+        output:
+          $isSafe: { db: "postgres" }
+    ```
 - **Custom Functions**: Support arbitrary logic via JS/TS functions.
   - `output` function: `(actualOutput, input) => boolean | string`
   - `expect` function: `(fullResult, input) => boolean | string`
@@ -449,7 +460,7 @@ USAGE
     [--logLevelMaxLen <value> -l trace|debug|verbose|info|notice|warn|error|fatal|print|silence] [--histories <value>]
     [-n] [-k] [-t <value> ] [--no-chats] [--no-inputs ] [-m] [-f <value>] [-d <value>] [-D <value>...] [-a <value>] [-b
     <value>] [-p <value>...] [-L <value>] [-A <value>] [-e true|false|line] [-e <value>] [-P <value>] [--consoleClear]
-    [-i <value>...] [-x <value>...] [-g] [-c <value>] [--checkSchema]
+    [-i <value>...] [-x <value>...] [-g] [-c <value>] [--checkSchema] [--allowOperatorOverride]
 
 ARGUMENTS
   FILE  the test fixtures file path
@@ -484,6 +495,7 @@ FLAGS
   -t, --inputs=<value>                 the input histories folder for interactive mode to record
   -u, --api=<value>                    the api URL
   -x, --excludeIndex=<value>...        the index of the fixture to exclude from running
+      --allowOperatorOverride          Whether allow to override built-in operators
       --apiKey=<value>                 the api key (optional)
       --[no-]banner                    show banner
       --[no-]checkSchema               Whether check JSON schema of output

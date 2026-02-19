@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { Args, Flags } from '@oclif/core'
 import { omit } from 'lodash-es'
 // @ts-ignore
@@ -67,6 +68,11 @@ export default class RunTest extends AICommand {
       aliases: ['checkschema', 'check-schema'],
       default: true, allowNo: true,
     }),
+    'allowOperatorOverride': Flags.boolean({
+      aliases: ['allow-operator-override'],
+      description: 'Whether allow to override built-in operators',
+      default: false,
+    }),
   }
 
   log(level: LogLevel, ...args: any[]) {
@@ -86,6 +92,7 @@ export default class RunTest extends AICommand {
     // }
 
     const userConfig = await this.loadConfig(flags.config, opts)
+    Object.assign(userConfig, flags)
     this.logLevel = userConfig.logLevel = userConfig.logLevel ?? 'warn'
     logLevel.json = isJson
     const hasBanner = userConfig.banner ?? userConfig.interactive
@@ -158,6 +165,8 @@ export default class RunTest extends AICommand {
   async runTest(userConfig: any) {
     const { scriptIds, fixtures, skips, fixtureInfo, fixtureFilepath } = userConfig.fixtureFileInfo
     const fixtureConfig = fixtureInfo.data
+    const baseDir = path.dirname(path.resolve(fixtureFilepath))
+    const operators = fixtureConfig.operators
 
     const executor = new CLIScriptExecutor(userConfig)
     const runner = new AITestRunner(executor)
@@ -176,6 +185,9 @@ export default class RunTest extends AICommand {
         fixtureConfig,
         userConfig,
         skips,
+        baseDir,
+        operators,
+        allowOperatorOverride: userConfig.allowOperatorOverride,
         // Optional: scriptConfig metadata if we can load it here
       })
 

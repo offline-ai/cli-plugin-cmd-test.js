@@ -112,6 +112,22 @@ toolTester: agent.ai.yaml # 默认为 'toolTester'
   - **`$sequence`**: 针对数组，必须按顺序出现指定的匹配项（中间允许干扰）。
   - **`$not`**: 反向断言，如果内容匹配模式则测试失败。
   - **`$schema`**: 显式使用 JSON Schema 验证值（推荐）。
+- **自定义验证操作符 (New)**: 支持通过 `js://` 协议或 npm 包名动态加载验证逻辑。
+  - 在 Front-matter 的 `operators` 中定义。
+  - 使用方式: `$opName: expectedValue`。
+  - 示例:
+
+    ```yaml
+    ---
+    operators:
+      $isSafe: "./security.js#isSafe"
+    ---
+    - input: "生成 SQL"
+      expect:
+        output:
+          $isSafe: { db: "postgres" }
+    ```
+
 - **自定义函数**: 支持通过 JavaScript/TypeScript 函数实现任意复杂的匹配逻辑。
   - 当 `output` 为函数时，它接收 `(actualOutput, input)`。
   - 当 `expect` 为函数时，它接收 `(fullResult, input) => boolean | string`。
