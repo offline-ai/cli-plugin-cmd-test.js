@@ -66,7 +66,8 @@ description: 'This is a AI test fixtures file'
 script: '[basename].ai.yaml'
 ---
 # 测试样例项
-- input: # 输入内容
+- title: '可选的测试用例标题'
+  input: # 输入内容
    content: '...'
    ...
  output: # 预期输出结果

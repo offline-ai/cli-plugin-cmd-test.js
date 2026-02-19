@@ -48,12 +48,14 @@ export class ConsoleReporter {
 
     runner.on('test:start', (data) => {
       const i = data?.i ?? '?'
-      this.log('notice', `${color.cyan('▶')} Running ${color.blue(scriptBase)} Fixture[${i}]`)
+      const title = data?.title ? `: ${data.title}` : ''
+      this.log('notice', `${color.cyan('▶')} Running ${color.blue(scriptBase)} Fixture[${i}]${title}`)
     })
 
     runner.on('test:pass', (log: AITestLogItem) => {
       if (!log) return
-      this.log('warn', `${color.green('✔ PASSED')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      const title = log.title ? `: ${log.title}` : ''
+      this.log('warn', `${color.green('✔ PASSED')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
       if (log.reason) {
         const reason = typeof log.reason === 'string' ? log.reason : (log.reason ? cj(log.reason) : 'null')
         this.log('warn', `  Reason: ${reason}`)
@@ -66,7 +68,8 @@ export class ConsoleReporter {
 
     runner.on('test:fail', (log: AITestLogItem) => {
       if (!log) return
-      this.log('warn', `${color.red('✖ FAILED')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      const title = log.title ? `: ${log.title}` : ''
+      this.log('warn', `${color.red('✖ FAILED')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
       if (log.reason) {
         const reason = typeof log.reason === 'string' ? log.reason : (log.reason ? cj(log.reason) : 'null')
         this.log('warn', `  Reason: ${reason}`)
@@ -76,13 +79,15 @@ export class ConsoleReporter {
 
     runner.on('test:error', (log: AITestLogItem) => {
       if (!log) return
-      this.log('warn', `${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}] (${log.duration}ms)`)
+      const title = log.title ? `: ${log.title}` : ''
+      this.log('warn', `${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
       if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
     })
 
     runner.on('test:skip', (log: AITestLogItem) => {
       if (!log) return
-      this.log('notice', `${color.darkGray('○')} SKIPPED ${color.blue(scriptBase)} Fixture[${log.i}]`)
+      const title = log.title ? `: ${log.title}` : ''
+      this.log('notice', `${color.darkGray('○')} SKIPPED ${color.blue(scriptBase)} Fixture[${log.i}]${title}`)
     })
   }
 

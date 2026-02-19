@@ -89,7 +89,8 @@ description: 'This is a AI test fixtures file'
 script: '[basename].ai.yaml'
 ---
 # the test fixture item:
-- input: # the input passed into the script
+- title: 'Optional title of the test case'
+  input: # the input passed into the script
     content: '...'
     ...
   output: # the expected output to compare the script's output

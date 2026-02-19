@@ -29,6 +29,37 @@ describe('ConsoleReporter', () => {
     expect(mockCmd.log).toHaveBeenCalledWith('warn', expect.stringContaining('✔ PASSED'))
   })
 
+  it('should display title in test:start if provided', () => {
+    runner.emit('test:start', { i: 0, title: 'My Title' })
+    expect(mockCmd.log).toHaveBeenCalledWith('notice', expect.stringContaining('Fixture[0]: My Title'))
+  })
+
+  it('should not display title in test:start if not provided', () => {
+    runner.emit('test:start', { i: 0 })
+    expect(mockCmd.log).toHaveBeenCalledWith('notice', expect.not.stringContaining(': '))
+    expect(mockCmd.log).toHaveBeenCalledWith('notice', expect.stringContaining('Fixture[0]'))
+  })
+
+  it('should display title in test:pass if provided', () => {
+    runner.emit('test:pass', { i: 0, title: 'Pass Title', duration: 100, passed: true })
+    expect(mockCmd.log).toHaveBeenCalledWith('warn', expect.stringContaining('Fixture[0]: Pass Title'))
+  })
+
+  it('should display title in test:fail if provided', () => {
+    runner.emit('test:fail', { i: 0, title: 'Fail Title', duration: 100, passed: false })
+    expect(mockCmd.log).toHaveBeenCalledWith('warn', expect.stringContaining('Fixture[0]: Fail Title'))
+  })
+
+  it('should display title in test:error if provided', () => {
+    runner.emit('test:error', { i: 0, title: 'Error Title', duration: 100, error: new Error('oops') })
+    expect(mockCmd.log).toHaveBeenCalledWith('warn', expect.stringContaining('Fixture[0]: Error Title'))
+  })
+
+  it('should display title in test:skip if provided', () => {
+    runner.emit('test:skip', { i: 0, title: 'Skip Title' })
+    expect(mockCmd.log).toHaveBeenCalledWith('notice', expect.stringContaining('Fixture[0]: Skip Title'))
+  })
+
   it('should log fail event with auto-generated diff for strings', () => {
     runner.emit('test:fail', {
       i: 1,
