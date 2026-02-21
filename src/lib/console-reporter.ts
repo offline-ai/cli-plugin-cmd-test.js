@@ -6,6 +6,11 @@ import * as diff from 'diff'
 import { LogLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 import { AITestRunner, AITestLogItem, AIValidationFailure } from '@isdk/ai-test-runner'
 
+function indent(val: any, prefix = '    ') {
+  const str = String(val)
+  return str.split('\n').map(line => prefix + line).join('\n')
+}
+
 function stableStringify(obj: any): string {
   if (obj === undefined) return 'undefined'
   if (obj === null) return 'null'
@@ -97,11 +102,6 @@ export class ConsoleReporter {
     const sNot = isNot ? color.red('NOT ') : ''
     const level = isFailed ? 'warn' : 'notice'
 
-    const indent = (val: any, prefix = '    ') => {
-      const str = String(val)
-      return str.split('\n').map(line => prefix + line).join('\n')
-    }
-
     if (isFailed && input !== undefined) {
       this.log(level, `  Input:`)
       this.log(level, indent(this.formatValue(input)))
@@ -189,19 +189,23 @@ export class ConsoleReporter {
     } else if (f.expected instanceof RegExp) {
       this.log(level, `    ${color.red('✖')} ${pathPrefix} Pattern mismatch:`)
       this.log(level, `      Expected: ${color.magenta(f.expected.toString())}`)
-      this.log(level, `      Actual:   ${this.formatValue(f.actual)}`)
+      this.log(level, `      Actual:   ${indent(this.formatValue(f.actual), '      ')}`)
     } else if (f.message) {
       this.log(level, `    ${color.red('✖')} ${pathPrefix} ${color.red(f.message)}`)
-      if (f.actual !== undefined && f.expected !== undefined) {
+      if (f.actual !== undefined || f.expected !== undefined) {
         if (typeof f.actual === 'string' && typeof f.expected === 'string') {
           const d = (f.actual.includes('\n') || f.expected.includes('\n'))
             ? diff.diffLines(f.expected, f.actual)
             : (f.expected.length > 40 ? diff.diffWords(f.expected, f.actual) : diff.diffChars(f.expected, f.actual))
           this.renderDiff(d, '      ')
         } else {
-          this.log(level, `      Actual:   ${this.formatValue(f.actual)}`)
-          this.log(level, `      Expected: ${this.formatValue(f.expected)}`)
+          this.log(level, `      Actual:   ${indent(this.formatValue(f.actual), '      ')}`)
+          this.log(level, `      Expected: ${indent(this.formatValue(f.expected), '      ')}`)
         }
+      } else {
+        this.log(level, `      Actual:   ${this.formatValue(f.actual)}`)
+        this.log(level, `      Expected: ${this.formatValue(f.expected)}`)
+        this.log(level, `      ${color.darkGray('Note: Both actual and expected are undefined.')}`)
       }
     }
   }

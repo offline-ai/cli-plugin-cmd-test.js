@@ -396,7 +396,7 @@ line3`
     })
     const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
     expect(allLogs).not.toContain('Diff:')
-    expect(allLogs).toContain('Actual:   "some text"')
+    expect(allLogs).toMatch(/Actual:\s+"some text"/)
     expect(allLogs).toContain('Expected: /other/')
   })
 
@@ -656,8 +656,94 @@ line3`
       const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n')
       expect(allLogs).toContain('Pattern mismatch:')
       expect(allLogs).toContain('Expected: /^v\\d+/')
-      expect(allLogs).toContain('Actual:   "1.2.3"')
+      expect(allLogs).toMatch(/Actual:\s+"1.2.3"/)
       expect(allLogs).not.toContain('Diff:')
     })
+
+    it('should log actual and expected values even if one is undefined, and note if both are undefined', () => {
+      // Case 1: actual is undefined, expected is defined
+      runner.emit('test:fail', {
+        i: 106,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            message: 'Value equality check failed',
+            actual: undefined,
+            expected: 'some value'
+          }
+        ]
+      });
+      let allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n');
+      expect(allLogs).toMatch(/Actual:\s+undefined/);
+      expect(allLogs).toMatch(/Expected:\s+"some value"/);
+      expect(allLogs).not.toContain('Note: Both actual and expected are undefined.');
+      mockCmd.log.mockClear(); // 清除之前的日志
+
+      // Case 2: both actual and expected are undefined
+      runner.emit('test:fail', {
+        i: 107,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            message: 'Value equality check failed',
+            actual: undefined,
+            expected: undefined
+          }
+        ]
+      });
+      allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n');
+      expect(allLogs).toMatch(/Actual:\s+undefined/);
+      expect(allLogs).toContain('Expected: undefined');
+      expect(allLogs).toContain('Note: Both actual and expected are undefined.');
+      mockCmd.log.mockClear(); // 清除之前的日志
+
+      // Case 3: actual is defined, expected is undefined
+      runner.emit('test:fail', {
+        i: 108,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            message: 'Value equality check failed',
+            actual: 'some actual',
+            expected: undefined
+          }
+        ]
+      });
+      allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n');
+      expect(allLogs).toMatch(/Actual:\s+"some actual"/);
+      expect(allLogs).toMatch(/Expected:\s+undefined/);
+      expect(allLogs).not.toContain('Note: Both actual and expected are undefined.');
+    });
+
+    it('should show Actual and Expected for object failures with "Value equality check failed" message', () => {
+      runner.emit('test:fail', {
+        i: 109,
+        duration: 10,
+        passed: false,
+        failures: [
+          {
+            message: 'Value equality check failed',
+            actual: { a: 1, b: { c: 3, d: 4 } },
+            expected: { a: 1, b: { c: 5, e: 6 } }
+          }
+        ]
+      });
+      const allLogs = mockCmd.log.mock.calls.map((c: any) => stripColor(c[1])).join('\n');
+      expect(allLogs).toContain('Actual:');
+      expect(allLogs).toContain('Expected:');
+      // Verify sorted keys from stableStringify and proper indentation
+      expect(allLogs).toContain('    {');
+      expect(allLogs).toContain('      "a": 1,');
+      expect(allLogs).toContain('      "b": {');
+      expect(allLogs).toContain('        "c": 3,');
+      expect(allLogs).toContain('        "d": 4');
+      expect(allLogs).toContain('      }');
+      expect(allLogs).toContain('        "c": 5,');
+      expect(allLogs).toContain('        "e": 6');
+      expect(allLogs).not.toContain('JSON Diff:'); // 确保不再有 JSON Diff
+    });
   })
 })
