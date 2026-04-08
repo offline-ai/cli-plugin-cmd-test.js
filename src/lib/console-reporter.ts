@@ -162,7 +162,7 @@ export class ConsoleReporter {
         const d = (actualStr.includes('\n') || expectedStr.includes('\n'))
           ? diff.diffLines(expectedStr, actualStr)
           : diff.diffChars(expectedStr, actualStr)
-        this.renderDiff(d, '  ')
+        this.renderDiff(d, '  ', level)
       }
     }
   }
@@ -185,7 +185,7 @@ export class ConsoleReporter {
 
     if (f.diff) {
       this.log(level, `    ${color.red('✖')} ${pathPrefix} ${f.message || 'Difference'}:`)
-      this.renderDiff(f.diff, '      ')
+      this.renderDiff(f.diff, '      ', level)
     } else if (f.expected instanceof RegExp) {
       this.log(level, `    ${color.red('✖')} ${pathPrefix} Pattern mismatch:`)
       this.log(level, `      Expected: ${color.magenta(f.expected.toString())}`)
@@ -197,7 +197,7 @@ export class ConsoleReporter {
           const d = (f.actual.includes('\n') || f.expected.includes('\n'))
             ? diff.diffLines(f.expected, f.actual)
             : (f.expected.length > 40 ? diff.diffWords(f.expected, f.actual) : diff.diffChars(f.expected, f.actual))
-          this.renderDiff(d, '      ')
+          this.renderDiff(d, '      ', level)
         } else {
           this.log(level, `      Actual:   ${indent(this.formatValue(f.actual), '      ')}`)
           this.log(level, `      Expected: ${indent(this.formatValue(f.expected), '      ')}`)
@@ -210,7 +210,7 @@ export class ConsoleReporter {
     }
   }
 
-  private renderDiff(diffItems: any[], prefix = '  ') {
+  private renderDiff(diffItems: any[], prefix = '  ', level: LogLevel = 'notice') {
     if (!Array.isArray(diffItems)) return
     const isMultiLine = diffItems.some(d => d && d.value && typeof d.value === 'string' && d.value.includes('\n'))
     const indent = prefix + '  '
@@ -230,7 +230,7 @@ export class ConsoleReporter {
         if (d.verified) {
           result = color.white('✓(' + this.stripConsoleColor(result) + ')')
         }
-        this.log('notice', `${prefix}${result}`)
+        this.log(level, `${prefix}${result}`)
       })
       return
     }
@@ -247,9 +247,9 @@ export class ConsoleReporter {
         }
         return result
       }).join('')
-      this.log('notice', `${prefix}${color.red('✖')} Diff: ${diffStr}`)
+      this.log(level, `${prefix}${color.red('✖')} Diff: ${diffStr}`)
     } else {
-      this.log('notice', `${prefix}${color.red('✖')} Diff:`)
+      this.log(level, `${prefix}${color.red('✖')} Diff:`)
       diffItems.forEach(d => {
         if (!d || !d.value) return
         const lines = String(d.value).split('\n')
@@ -264,7 +264,7 @@ export class ConsoleReporter {
           if (d.verified) {
             result = color.white('✓(' + this.stripConsoleColor(result) + ')')
           }
-          this.log('notice', `${indent}${result}`)
+          this.log(level, `${indent}${result}`)
         })
       })
     }
