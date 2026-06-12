@@ -8,7 +8,9 @@
   },
   "homepage": "https://github.com/offline-ai/cli-plugin-cmd-test.js",
   "repository": "https://github.com/offline-ai/cli-plugin-cmd-test.js",
-  "bugs": "https://github.com/@offline-ai/cli-plugin-cmd-test.js/issues",
+  "bugs": {
+    "url": "https://github.com/offline-ai/cli-plugin-cmd-test.js/issues"
+  },
   "dependencies": {
     "@isdk/ai-test-runner": "workspace:*",
     "@isdk/ai-tool": "workspace:*",
