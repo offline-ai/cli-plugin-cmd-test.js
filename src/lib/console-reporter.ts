@@ -41,8 +41,43 @@ function truncateMiddle(str: string, maxLen: number = 500): string {
   return str.substring(0, half) + '...' + str.substring(str.length - half)
 }
 
+function formatLLMParameters(params: any): string {
+  if (!params || typeof params !== 'object') return ''
+
+  const ignoredKeys = new Set(['response', 'name'])
+
+  const entries = Object.entries(params)
+    .filter(([key, val]) => {
+      if (ignoredKeys.has(key)) return false
+      if (val === undefined || val === null || val === '') return false
+      return true
+    })
+    .map(([key, val]) => {
+      let valStr: string
+      if (typeof val === 'object') {
+        try {
+          valStr = JSON.stringify(val)
+        } catch (e) {
+          valStr = '[Complex Object]'
+        }
+      } else {
+        valStr = String(val)
+      }
+      return `${key}=${valStr}`
+    })
+
+  return entries.join(', ')
+}
+
 export class ConsoleReporter {
-  constructor(private cmd: any, private logLevel: LogLevel = 'warn') {}
+  private failures: { scriptBase: string; log: AITestLogItem; type: 'fail' | 'error' }[] = []
+
+  constructor(
+    private cmd: any,
+    private logLevel: LogLevel = 'warn',
+    private deferErrors: boolean = false,
+    private runIndex?: number
+  ) { }
 
   log(level: LogLevel, ...args: any[]) {
     this.cmd?.log?.(level, ...args)
@@ -75,18 +110,38 @@ export class ConsoleReporter {
       if (!log) return
       const title = log.title ? `: ${log.title}` : ''
       this.log('warn', `${color.red('✖ FAILED')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
-      if (log.reason) {
-        const reason = typeof log.reason === 'string' ? log.reason : (log.reason ? cj(log.reason) : 'null')
-        this.log('warn', `  Reason: ${reason}`)
+
+      if (this.deferErrors) {
+        this.failures.push({ scriptBase, log, type: 'fail' })
+      } else {
+        const params = (log as any).actualMeta?.ai?.parameters
+        const paramsStr = formatLLMParameters(params)
+        if (paramsStr) {
+          this.log('warn', `  LLM Parameters: ${paramsStr}`)
+        }
+        if (log.reason) {
+          const reason = typeof log.reason === 'string' ? log.reason : (log.reason ? cj(log.reason) : 'null')
+          this.log('warn', `  Reason: ${reason}`)
+        }
+        this.renderDetail(log, true)
       }
-      this.renderDetail(log, true)
     })
 
     runner.on('test:error', (log: AITestLogItem) => {
       if (!log) return
       const title = log.title ? `: ${log.title}` : ''
       this.log('warn', `${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
-      if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+
+      if (this.deferErrors) {
+        this.failures.push({ scriptBase, log, type: 'error' })
+      } else {
+        const params = (log as any).actualMeta?.ai?.parameters
+        const paramsStr = formatLLMParameters(params)
+        if (paramsStr) {
+          this.log('warn', `  LLM Parameters: ${paramsStr}`)
+        }
+        if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+      }
     })
 
     runner.on('test:skip', (log: AITestLogItem) => {
@@ -94,6 +149,48 @@ export class ConsoleReporter {
       const title = log.title ? `: ${log.title}` : ''
       this.log('notice', `${color.darkGray('○')} SKIPPED ${color.blue(scriptBase)} Fixture[${log.i}]${title}`)
     })
+  }
+
+  renderErrors() {
+    if (!this.deferErrors || this.failures.length === 0) return
+
+    const runSuffix = this.runIndex !== undefined ? ` (Run #${this.runIndex})` : ''
+    this.log('warn', '\n' + color.lightRed(`Detailed Errors/Failures${runSuffix}:`))
+
+    this.failures.forEach((item, index) => {
+      const { scriptBase, log, type } = item
+      const title = log.title ? `: ${log.title}` : ''
+      const prefix = `${index + 1}) `
+
+      if (type === 'fail') {
+        this.log('warn', `\n${prefix}${color.red('✖ FAILED')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
+
+        const params = (log as any).actualMeta?.ai?.parameters
+        const paramsStr = formatLLMParameters(params)
+        if (paramsStr) {
+          this.log('warn', `  LLM Parameters: ${paramsStr}`)
+        }
+
+        if (log.reason) {
+          const reason = typeof log.reason === 'string' ? log.reason : (log.reason ? cj(log.reason) : 'null')
+          this.log('warn', `  Reason: ${reason}`)
+        }
+        this.renderDetail(log, true)
+      } else if (type === 'error') {
+        this.log('warn', `\n${prefix}${color.red('✖ ERROR')} ${color.blue(scriptBase)} Fixture[${log.i}]${title} (${log.duration}ms)`)
+
+        const params = (log as any).actualMeta?.ai?.parameters
+        const paramsStr = formatLLMParameters(params)
+        if (paramsStr) {
+          this.log('warn', `  LLM Parameters: ${paramsStr}`)
+        }
+
+        if (log.error) {
+          this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+        }
+      }
+    })
+    this.log('warn', '')
   }
 
   private renderDetail(log: AITestLogItem, isFailed = false) {
@@ -111,9 +208,9 @@ export class ConsoleReporter {
     const bothShort = isShort(actual) && isShort(expected)
 
     const hasFailDiff = !isNot && ((failures && failures.length > 0) ||
-                        (isFailed && expected !== undefined && !(expected instanceof RegExp)))
+      (isFailed && expected !== undefined && !(expected instanceof RegExp)))
 
-    if (!isFailed || !hasFailDiff || bothShort) {
+    if (!isFailed || !hasFailDiff || bothShort || LogLevelMap[this.logLevel] <= LogLevelMap['notice']) {
       this.log(level, `  Actual Output:`)
       this.log(level, indent(this.formatValue(actual)))
     }
@@ -175,7 +272,13 @@ export class ConsoleReporter {
     }
     if (typeof val === 'function') return color.yellow(val.name ? val.name + '()' : val.toString())
     if (val instanceof RegExp) return color.magenta(val.toString())
-    if (typeof val === 'object') return cj(val)
+    if (typeof val === 'object') {
+      try {
+        return cj(val)
+      } catch (e: any) {
+        return color.red(`[Stringify Error: ${e.message}]`)
+      }
+    }
     return color.cyan(String(val))
   }
 
@@ -243,7 +346,7 @@ export class ConsoleReporter {
           d.removed ? color.red('-' + value) : color.darkGray(value)
 
         if (d.verified) {
-          result = color.white('✓('+ this.stripConsoleColor(result) + ')')
+          result = color.white('✓(' + this.stripConsoleColor(result) + ')')
         }
         return result
       }).join('')
@@ -258,8 +361,8 @@ export class ConsoleReporter {
           let prefixChar = d.added ? '+' : d.removed ? '-' : ' '
           let lineContent = line
           let result = d.added ? color.green(prefixChar + lineContent) :
-                       d.removed ? color.red(prefixChar + lineContent) :
-                       color.darkGray(prefixChar + lineContent)
+            d.removed ? color.red(prefixChar + lineContent) :
+              color.darkGray(prefixChar + lineContent)
 
           if (d.verified) {
             result = color.white('✓(' + this.stripConsoleColor(result) + ')')

@@ -22,7 +22,8 @@ vi.mock('@isdk/ai-test-runner', () => {
 
 vi.mock('../../../src/lib/console-reporter.js', () => ({
   ConsoleReporter: vi.fn().mockImplementation(() => ({
-    observe: vi.fn()
+    observe: vi.fn(),
+    renderErrors: vi.fn()
   }))
 }))
 
@@ -188,5 +189,24 @@ describe('RunTest custom operators', () => {
         allowOperatorOverride: false
       })
     )
+  })
+
+  it('should instantiate ConsoleReporter with deferErrors: true and runIndex, and call renderErrors', async () => {
+    const fixtureFileInfo = {
+      scriptIds: ['test.ai.yaml'],
+      fixtures: [],
+      skips: {},
+      fixtureInfo: { data: {} },
+      fixtureFilepath: 'test.fixture.yaml'
+    }
+
+    const { ConsoleReporter } = await import('../../../src/lib/console-reporter.js')
+
+    await command.runTest({ fixtureFileInfo, logLevel: 'error' }, 5)
+
+    expect(ConsoleReporter).toHaveBeenCalledWith(command, 'error', true, 5)
+    
+    const reporterInstance = vi.mocked(ConsoleReporter).mock.results[0].value
+    expect(reporterInstance.renderErrors).toHaveBeenCalled()
   })
 })

@@ -52,13 +52,13 @@ export default class RunTest extends AICommand {
       description: 'Whether console clear after stream output, default to true in interactive, false to non-interactive',
       allowNo: true,
     }),
-    includeIndex: Flags.integer({char: 'i', description: 'the index of the fixture to run', multiple: true}),
+    includeIndex: Flags.integer({ char: 'i', description: 'the index of the fixture to run', multiple: true }),
     excludeIndex: Flags.integer({
       char: 'x',
       description: 'the index of the fixture to exclude from running',
       multiple: true,
     }),
-    generateOutput: Flags.boolean({char: 'g', description: 'generate output to fixture file if no output is provided'}),
+    generateOutput: Flags.boolean({ char: 'g', description: 'generate output to fixture file if no output is provided' }),
     runCount: Flags.integer({
       char: 'c', description: 'The number of times to run the test case to check if the results are consistent with the previous run, and to record the counts of matching and non-matching results',
       default: 1,
@@ -83,7 +83,7 @@ export default class RunTest extends AICommand {
 
   async run(): Promise<any> {
     const opts = await this.parse(RunTest as any)
-    const {args, flags} = opts
+    const { args, flags } = opts
     // console.log('🚀 ~ RunScript ~ run ~ flags:', flags)
     const isJson = this.jsonEnabled()
 
@@ -101,7 +101,7 @@ export default class RunTest extends AICommand {
       this.error('missing fixture file to run! require argument: `-f <fixture_file_name>`')
     }
 
-    if (hasBanner) {showBanner()}
+    if (hasBanner) { showBanner() }
     userConfig.ThisCmd = this
 
     if (!userConfig.logLevel) {
@@ -111,9 +111,9 @@ export default class RunTest extends AICommand {
     const fixtureFileInfo = await loadTestFixtureFile(fixtureFilename, userConfig)
     userConfig.fixtureFileInfo = fixtureFileInfo
     const runCount = userConfig.runCount >= 1 ? userConfig.runCount : 1
-    const testResults: {script: string, test: AITestFixtureResult}[][] = []
+    const testResults: { script: string, test: AITestFixtureResult }[][] = []
     for (let i = 0; i < runCount; i++) {
-      const test = await this.runTest(userConfig)
+      const test = await this.runTest(userConfig, runCount > 1 ? i + 1 : undefined)
       this.log('warn', `----------------------------------------`)
       testResults.push(test)
     }
@@ -127,13 +127,13 @@ export default class RunTest extends AICommand {
       let totalSkipped = 0
       let totalDuration = 0
 
-      for (let i=0; i < testResults.length; i++) {
+      for (let i = 0; i < testResults.length; i++) {
         const vTestResult = testResults[i]
         let failed = false
-        for (let j=0; j < vTestResult.length; j++) {
+        for (let j = 0; j < vTestResult.length; j++) {
           const vTest = vTestResult[j]
 
-          const {script, test: testInfo} = vTest
+          const { script, test: testInfo } = vTest
           totalPassed += testInfo.passedCount
           totalFailed += testInfo.failedCount
           totalSkipped += testInfo.skippedCount
@@ -154,7 +154,7 @@ export default class RunTest extends AICommand {
             failed = true
           }
         }
-        if (failed) {notMatchedFailedCount++}
+        if (failed) { notMatchedFailedCount++ }
       }
       this.log('warn', `Repeated(${runCount}) All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms, ${notMatchedFailedCount} missmatched.`)
     }
@@ -162,7 +162,7 @@ export default class RunTest extends AICommand {
     return testResults
   }
 
-  async runTest(userConfig: any) {
+  async runTest(userConfig: any, runIndex?: number) {
     const { scriptIds, fixtures, skips, fixtureInfo, fixtureFilepath } = userConfig.fixtureFileInfo
     const fixtureConfig = fixtureInfo.data
     const baseDir = path.dirname(path.resolve(fixtureFilepath))
@@ -170,7 +170,7 @@ export default class RunTest extends AICommand {
 
     const executor = new CLIScriptExecutor(userConfig)
     const runner = new AITestRunner(executor)
-    const reporter = new ConsoleReporter(this, userConfig.logLevel)
+    const reporter = new ConsoleReporter(this, userConfig.logLevel, true, runIndex)
 
     const testResults: { script: string, test: any }[] = []
     let totalPassed = 0
@@ -201,7 +201,7 @@ export default class RunTest extends AICommand {
           }
         })
         if (modified) {
-          this.log(`Without output: write the result as output`)
+          this.log('warn', `Without output: write the result as output`)
           await writeYamlFile(fixtureFilepath, fixtures)
         }
       }
@@ -215,6 +215,8 @@ export default class RunTest extends AICommand {
 
       this.log('warn', `${scriptFilepath}: ${testResult.passedCount} passed, ${testResult.failedCount} failed, ${testResult.skippedCount} skipped, total ${testResult.passedCount + testResult.failedCount + testResult.skippedCount}, time ${testResult.duration}ms`)
     }
+
+    reporter.renderErrors()
 
     this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms`)
 
