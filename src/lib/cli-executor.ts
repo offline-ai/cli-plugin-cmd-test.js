@@ -8,7 +8,7 @@ export class CLIScriptExecutor implements AIScriptExecutor {
   async execute(context: AIExecutionContext): Promise<AIExecutionResult> {
     const { script, args, options } = context
     // Merge userConfig and individual test options
-    const mergedConfig = { ...this.userConfig, ...options, data: args }
+    const mergedConfig = { ...this.userConfig, ...options, data: args, chatsDir: '' }
 
     // Call the original runScript from cli-plugin-core
     const result = await runScript(script, mergedConfig)
