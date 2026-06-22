@@ -4,7 +4,7 @@ import { omit } from 'lodash-es'
 // @ts-ignore
 import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
-import { AICommand, AICommonFlags, showBanner } from '@offline-ai/cli-common'
+import { AICommand, AICommonFlags, colors, showBanner } from '@offline-ai/cli-common'
 import { loadTestFixtureFile } from '../../../lib/test-fixture-file.js'
 import '../../../lib/yaml-types/index.js'
 
@@ -177,6 +177,7 @@ export default class RunTest extends AICommand {
     let totalFailed = 0
     let totalSkipped = 0
     let totalDuration = 0
+    let lastMetaUsage: any
 
     for (const scriptFilepath of scriptIds) {
       reporter.observe(runner, scriptFilepath)
@@ -210,6 +211,16 @@ export default class RunTest extends AICommand {
       totalFailed += testResult.failedCount
       totalSkipped += testResult.skippedCount
       totalDuration += testResult.duration
+      const logs = testResult.logs
+      if (Array.isArray(logs) && logs.length) {
+        for (let i = logs.length - 1; i <= 0; i--) {
+          const log = logs[i]
+          if (log.actualMeta?.ai?.parameters.usage) {
+            lastMetaUsage = log.actualMeta.ai.parameters.usage
+            break
+          }
+        }
+      }
 
       testResults.push({ script: scriptFilepath, test: testResult })
 
@@ -219,6 +230,26 @@ export default class RunTest extends AICommand {
     reporter.renderErrors()
 
     this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms`)
+
+    if (lastMetaUsage) {
+      if (lastMetaUsage.loadModelTime) {
+        const t = lastMetaUsage.loadModelTime / 1000
+        this.log('notice', colors.gray('Load Model Time: ' + t.toFixed(2) + 's'))
+      }
+      let tokens = lastMetaUsage.prompt
+      if (tokens?.duration) {
+        const n = tokens.tokens / (tokens.duration / 1000)
+        this.log('notice', colors.gray('Prompt eval: ' + n.toFixed(2) + ' tokens/s, Total: ' + tokens.tokens))
+      }
+      tokens = lastMetaUsage.generation
+      if (tokens?.duration) {
+        const n = tokens.tokens / (tokens.duration / 1000)
+        this.log('notice', colors.gray('Generation eval: ' + n.toFixed(2) + ' tokens/s, Total: ' + tokens.tokens))
+      }
+      if (lastMetaUsage.graphsReused) {
+        this.log('notice', colors.gray('Graphs Reused: ' + lastMetaUsage.graphsReused))
+      }
+    }
 
     return testResults
   }
