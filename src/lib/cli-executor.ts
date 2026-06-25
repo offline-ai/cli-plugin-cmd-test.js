@@ -1,10 +1,14 @@
 import { AIScriptExecutor, AIExecutionContext, AIExecutionResult } from '@isdk/ai-test-runner'
-import { runScript } from '@offline-ai/cli-plugin-core'
+import { loadScript, runScript } from '@offline-ai/cli-plugin-core'
 import { normalizeMessages } from './normalize-messages.js'
 import { getMeta } from '@isdk/ai-tool-agent'
 
 export class CLIScriptExecutor implements AIScriptExecutor {
   constructor(private userConfig: any) {}
+
+  async loadScript(filename: string, userConfig: any) {
+    return loadScript(filename, userConfig)
+  }
 
   async execute(context: AIExecutionContext): Promise<AIExecutionResult> {
     const { script, args, options } = context

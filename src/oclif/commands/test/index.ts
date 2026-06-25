@@ -2,7 +2,7 @@ import path from 'node:path'
 import { Args, Flags } from '@oclif/core'
 import { omit } from 'lodash-es'
 // @ts-ignore
-import { LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
+import { getTemplateData, LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
 import { AICommand, AICommonFlags, colors, showBanner } from '@offline-ai/cli-common'
 import { loadTestFixtureFile } from '../../../lib/test-fixture-file.js'
@@ -182,6 +182,7 @@ export default class RunTest extends AICommand {
     for (const scriptFilepath of scriptIds) {
       reporter.observe(runner, scriptFilepath)
 
+      const scriptConfig = getTemplateData(await executor.loadScript(scriptFilepath, userConfig))
       const testResult = await runner.run(scriptFilepath, fixtures, {
         fixtureConfig,
         userConfig,
@@ -189,7 +190,7 @@ export default class RunTest extends AICommand {
         baseDir,
         operators,
         allowOperatorOverride: userConfig.allowOperatorOverride,
-        // Optional: scriptConfig metadata if we can load it here
+        scriptConfig,
       })
 
       // Side effect: Handle --generateOutput
