@@ -182,7 +182,7 @@ export default class RunTest extends AICommand {
     for (const scriptFilepath of scriptIds) {
       reporter.observe(runner, scriptFilepath)
 
-      const scriptConfig = getTemplateData(await executor.loadScript(scriptFilepath, userConfig))
+      const scriptConfig = getTemplateData(await executor.loadScript(scriptFilepath, {...userConfig, logLevel: 'silence'}))
       const testResult = await runner.run(scriptFilepath, fixtures, {
         fixtureConfig,
         userConfig,
