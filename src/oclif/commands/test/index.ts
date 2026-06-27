@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { Args, Flags } from '@oclif/core'
-import { omit } from 'lodash-es'
+import { omit, get as getByPath, set as setByPath } from 'lodash-es'
 // @ts-ignore
 import { getTemplateData, LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-agent'
 
@@ -177,7 +177,6 @@ export default class RunTest extends AICommand {
     let totalFailed = 0
     let totalSkipped = 0
     let totalDuration = 0
-    let lastMetaUsage: any
 
     for (const scriptFilepath of scriptIds) {
       reporter.observe(runner, scriptFilepath)
@@ -212,16 +211,6 @@ export default class RunTest extends AICommand {
       totalFailed += testResult.failedCount
       totalSkipped += testResult.skippedCount
       totalDuration += testResult.duration
-      const logs = testResult.logs
-      if (Array.isArray(logs) && logs.length) {
-        for (let i = logs.length - 1; i <= 0; i--) {
-          const log = logs[i]
-          if (log.actualMeta?.ai?.parameters.usage) {
-            lastMetaUsage = log.actualMeta.ai.parameters.usage
-            break
-          }
-        }
-      }
 
       testResults.push({ script: scriptFilepath, test: testResult })
 
@@ -231,7 +220,26 @@ export default class RunTest extends AICommand {
     reporter.renderErrors()
 
     this.log('warn', `All: ${totalPassed} passed, ${totalFailed} failed, ${totalSkipped} skipped, total ${totalPassed + totalFailed + totalSkipped}, time ${totalDuration}ms`)
+    {
+      // render usage
+      let totalMetaUsage: any
+      for (const testInfo of testResults) {
+        const logs = testInfo.test.logs
+        for (let i = logs.length - 1; i >= 0; i--) {
+          const log = logs[i]
+          if (log.actualMeta?.ai?.parameters.usage) {
+            const metaUsage = log.actualMeta.ai.parameters.usage
+            totalMetaUsage = addUsage(metaUsage, totalMetaUsage)
+          }
+        }
+      }
+      this.printUsage(totalMetaUsage)
+    }
 
+    return testResults
+  }
+
+  printUsage(lastMetaUsage: any) {
     if (lastMetaUsage) {
       if (lastMetaUsage.loadModelTime) {
         const t = lastMetaUsage.loadModelTime / 1000
@@ -248,10 +256,36 @@ export default class RunTest extends AICommand {
         this.log('notice', colors.gray('Generation eval: ' + n.toFixed(2) + ' tokens/s, Total: ' + tokens.tokens))
       }
       if (lastMetaUsage.graphsReused) {
-        this.log('notice', colors.gray('Graphs Reused: ' + lastMetaUsage.graphsReused))
+        let graphsReused = lastMetaUsage.graphsReused
+        if (lastMetaUsage.count > 0) graphsReused = graphsReused / lastMetaUsage.count
+        this.log('notice', colors.gray('Graphs Reused: ' + graphsReused))
       }
     }
-
-    return testResults
   }
+}
+
+function addUsage(lastMetaUsage: any, total?: any) {
+  if (!total) return {...lastMetaUsage, count: 1};
+    if (lastMetaUsage) {
+      setByPath(total, 'count', (getByPath(total, 'count') || 0) + 1)
+      let tokens = lastMetaUsage.prompt
+      if (tokens?.duration) {
+        // const n = tokens.tokens / (tokens.duration / 1000)
+        setByPath(total, 'prompt.duration', tokens.duration + (getByPath(total, 'prompt.duration')) || 0)
+      }
+      if (tokens?.tokens) {
+        setByPath(total, 'prompt.tokens', tokens.tokens + (getByPath(total, 'prompt.tokens')) || 0)
+      }
+      tokens = lastMetaUsage.generation
+      if (tokens?.duration) {
+        setByPath(total, 'generation.duration', tokens.duration + (getByPath(total, 'generation.duration')) || 0)
+      }
+      if (tokens?.tokens) {
+        setByPath(total, 'generation.tokens', tokens.tokens + (getByPath(total, 'generation.tokens')) || 0)
+      }
+      if (lastMetaUsage.graphsReused) {
+        setByPath(total, 'graphsReused', lastMetaUsage.graphsReused + (getByPath(total, 'graphsReused')) || 0)
+      }
+    }
+  return total
 }
