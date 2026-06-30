@@ -239,26 +239,26 @@ export default class RunTest extends AICommand {
     return testResults
   }
 
-  printUsage(lastMetaUsage: any) {
-    if (lastMetaUsage) {
-      if (lastMetaUsage.loadModelTime) {
-        const t = lastMetaUsage.loadModelTime / 1000
+  printUsage(metaUsage: any) {
+    if (metaUsage) {
+      if (metaUsage.loadModelTime) {
+        const t = metaUsage.loadModelTime / 1000
         this.log('notice', colors.gray('Load Model Time: ' + t.toFixed(2) + 's'))
       }
-      let tokens = lastMetaUsage.prompt
+      let tokens = metaUsage.prompt
       if (tokens?.duration) {
         const n = tokens.tokens / (tokens.duration / 1000)
         this.log('notice', colors.gray('Prompt eval: ' + n.toFixed(2) + ' tokens/s, Total: ' + tokens.tokens))
       }
-      tokens = lastMetaUsage.generation
+      tokens = metaUsage.generation
       if (tokens?.duration) {
         const n = tokens.tokens / (tokens.duration / 1000)
         this.log('notice', colors.gray('Generation eval: ' + n.toFixed(2) + ' tokens/s, Total: ' + tokens.tokens))
       }
-      if (lastMetaUsage.graphsReused) {
-        let graphsReused = lastMetaUsage.graphsReused
-        if (lastMetaUsage.count > 0) graphsReused = graphsReused / lastMetaUsage.count
-        this.log('notice', colors.gray('Graphs Reused: ' + graphsReused))
+      if (metaUsage.graphsReused) {
+        let graphsReused = metaUsage.graphsReused
+        // if (metaUsage.count > 0) graphsReused = graphsReused / metaUsage.count
+        this.log('notice', colors.gray('Graphs Reused: ' + graphsReused + ' totoal generation tokens: ' + tokens.tokens))
       }
     }
   }
