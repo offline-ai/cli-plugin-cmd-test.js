@@ -2,6 +2,7 @@ import { AIScriptExecutor, AIExecutionContext, AIExecutionResult } from '@isdk/a
 import { loadScript, runScript } from '@offline-ai/cli-plugin-core'
 import { normalizeMessages } from './normalize-messages.js'
 import { getMeta } from '@isdk/ai-tool-agent'
+import { omit } from 'lodash-es'
 
 export class CLIScriptExecutor implements AIScriptExecutor {
   constructor(private userConfig: any) {}
@@ -13,7 +14,7 @@ export class CLIScriptExecutor implements AIScriptExecutor {
   async execute(context: AIExecutionContext): Promise<AIExecutionResult> {
     const { script, args, options } = context
     // Merge userConfig and individual test options
-    const mergedConfig = { ...this.userConfig, ...options, data: args, chatsDir: '' }
+    const mergedConfig = { ...this.userConfig, ...options, data: omit(args, ['output']), chatsDir: '' }
 
     // Call the original runScript from cli-plugin-core
     const result = await runScript(script, mergedConfig)
