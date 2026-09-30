@@ -140,7 +140,10 @@ export class ConsoleReporter {
         if (paramsStr) {
           this.log('warn', `  LLM Parameters: ${paramsStr}`)
         }
-        if (log.error) this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+        if (log.error) {
+          this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+          console.error(log.error)
+        }
       }
     })
 
@@ -187,6 +190,7 @@ export class ConsoleReporter {
 
         if (log.error) {
           this.log('warn', `  ${color.red('🔴')} ${color.red(log.error.message || String(log.error))}`)
+          console.error(log.error)
         }
       }
     })
