@@ -6,7 +6,6 @@ import { getTemplateData, LogLevel, logLevel, LogLevelMap } from '@isdk/ai-tool-
 
 import { AICommand, AICommonFlags, colors, showBanner } from '@offline-ai/cli-common'
 import { loadTestFixtureFile } from '../../../lib/test-fixture-file.js'
-import '../../../lib/yaml-types/index.js'
 
 import { AITestRunner, AITestFixtureResult } from '@isdk/ai-test-runner'
 import { CLIScriptExecutor } from '../../../lib/cli-executor.js'
